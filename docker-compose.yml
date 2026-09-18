@@ -19,6 +19,48 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+  # ---- PostgreSQL: registro inmutable de eventos (Fase 2) ----
+  postgres:
+    image: postgres:17.6
+    container_name: centinela-postgres
+    ports:
+      - "5432:5432"          # la app corre en el host, no en la red de compose
+    environment:
+      POSTGRES_DB: centinela
+      POSTGRES_USER: centinela
+      POSTGRES_PASSWORD: centinela-local   # solo desarrollo local; en prod va por secreto
+      # Zona horaria en UTC: todos los timestamps del dominio son timestamptz.
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Sin esto, la app puede arrancar antes de que Postgres acepte conexiones
+      # y Flyway falla en el primer intento.
+      test: ["CMD-SHELL", "pg_isready -U centinela -d centinela"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---- Redis: last_seen del vigilante de silencio, rate-limit e idempotencia de borde ----
+  redis:
+    image: redis:7.4.2
+    container_name: centinela-redis
+    ports:
+      - "6379:6379"
+    # AOF activado: si Redis se reinicia no perdemos el last_seen de cada dispositivo.
+    # Aun asi el sistema es fail-safe: sin estado conocido, el vigilante escala.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
   # UI web para inspeccionar topicos y mensajes: http://localhost:8081
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -31,3 +73,9 @@ services:
       DYNAMIC_CONFIG_ENABLED: "true"
     depends_on:
       - kafka
+
+# Datos persistentes entre reinicios: los eventos son un log append-only,
+# perderlos al bajar el compose seria contradictorio.
+volumes:
+  postgres-data:
+  redis-data:

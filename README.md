@@ -13,11 +13,19 @@ consumidor de alertas), de modo que todo se valida **sin hardware real**.
 - Maven 3.9+
 - Docker + Docker Compose
 
-## 1. Levantar Kafka
+## 1. Levantar la infraestructura local
 ```bash
 docker compose up -d
 ```
-Kafka UI queda en http://localhost:8081
+Levanta Kafka, PostgreSQL y Redis:
+
+| Servicio   | Puerto | Notas                                            |
+|------------|--------|--------------------------------------------------|
+| Kafka      | 9092   | UI en http://localhost:8081                      |
+| PostgreSQL | 5432   | base `centinela`, usuario `centinela` (dev)      |
+| Redis      | 6379   | AOF activado                                     |
+
+Postgres y Redis tienen `healthcheck`: espera a que esten `healthy` antes de arrancar el backend.
 
 ## 2. Compilar
 ```bash

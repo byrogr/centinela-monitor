@@ -5,6 +5,13 @@ spring:
     # No necesitamos servidor web: el simulador es un CLIENTE HTTP.
     web-application-type: none
   autoconfigure:
-    # No conectamos a Kafka en modo simulador (el simulador solo hace POST HTTP).
+    # El simulador solo hace POST HTTP: no toca Kafka, ni PostgreSQL, ni Redis.
+    # OJO: en Boot 4 las autoconfiguraciones se movieron a modulos propios,
+    # por eso los paquetes son 'boot.<modulo>.autoconfigure' y no 'boot.autoconfigure.<modulo>'.
     exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+      - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
+      - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration

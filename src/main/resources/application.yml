@@ -2,11 +2,32 @@ spring:
   application:
     name: centinela-monitor
 
+  # ---- PostgreSQL: registro inmutable de eventos (Fase 2) ----
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/centinela}
+    username: ${POSTGRES_USER:centinela}
+    password: ${POSTGRES_PASSWORD:centinela-local}
+
+  jpa:
+    # El esquema lo gobierna Flyway; Hibernate solo valida que coincida.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+  # ---- Redis: last_seen del vigilante de silencio, rate-limit e idempotencia de borde ----
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
       # Fiabilidad: no queremos perder una alerta critica.
       acks: all
       retries: 5
@@ -17,7 +38,7 @@ spring:
       group-id: centinela-alert-consumer
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         spring.json.trusted.packages: "com.centinela.domain"
         spring.json.value.default.type: "com.centinela.domain.OsdEvent"
