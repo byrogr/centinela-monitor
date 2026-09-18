@@ -55,6 +55,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Lombok: elimina el boilerplate de getters/constructores en las entidades.
+             Scope 'provided': el parent de Boot 4 ya NO lo excluye del fat jar (Boot 3 si lo
+             hacia), y Lombok solo hace falta al compilar, nunca en runtime. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- JPA + Hibernate: entidades y repositorios del registro consultable. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -138,9 +147,36 @@
 
     <build>
         <plugins>
+            <!-- Processor path explicito: javac ya avisa de que en una version futura
+                 dejara de descubrir procesadores de anotaciones por classpath. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- El plugin empaqueta tambien el scope 'provided', y el parent de Boot 4
+                         ya no excluye Lombok como hacia el de Boot 3. Sin esto, el procesador
+                         de anotaciones viaja dentro del artefacto de produccion. -->
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

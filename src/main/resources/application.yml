@@ -16,6 +16,11 @@ spring:
 
   flyway:
     enabled: true
+    # db/seed trae los datos de desarrollo (V4). En produccion basta con
+    # FLYWAY_LOCATIONS=classpath:db/migration para que nunca se apliquen.
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration,classpath:db/seed}
+    # Si una ubicacion no existe queremos enterarnos, no seguir en silencio.
+    fail-on-missing-locations: true
 
   # ---- Redis: last_seen del vigilante de silencio, rate-limit e idempotencia de borde ----
   data:
@@ -40,8 +45,14 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.centinela.domain"
-        spring.json.value.default.type: "com.centinela.domain.OsdEvent"
+        spring.json.trusted.packages: "com.rmsolutions.centinela.domain"
+        spring.json.value.default.type: "com.rmsolutions.centinela.domain.OsdEvent"
+        # Ignoramos la cabecera __TypeId__ que escribe el productor y usamos SIEMPRE
+        # el tipo de arriba. Sin esto, un mensaje publicado antes de un renombrado de
+        # paquete (o por otro productor) revienta al deserializar y el evento se pierde.
+        # En un sistema fail-safe el consumidor no puede depender del nombre de clase
+        # que traia el mensaje: el contrato es el JSON, no el FQN de Java.
+        spring.json.use.type.headers: false
     listener:
       # Confirmamos offset por registro procesado (mas seguro para alertas).
       ack-mode: record
@@ -77,4 +88,4 @@ app:
 
 logging:
   level:
-    com.centinela: INFO
+    com.rmsolutions.centinela: INFO
