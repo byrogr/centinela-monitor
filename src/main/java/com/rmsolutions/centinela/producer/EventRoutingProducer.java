@@ -4,8 +4,8 @@ import com.rmsolutions.centinela.config.AppProperties;
 import com.rmsolutions.centinela.domain.OsdEvent;
 import com.rmsolutions.centinela.routing.RoutingDecision;
 import com.rmsolutions.centinela.routing.SeverityRouter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -22,21 +22,13 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile("!simulator")
+@Slf4j
+@RequiredArgsConstructor
 public class EventRoutingProducer {
-
-    private static final Logger log = LoggerFactory.getLogger(EventRoutingProducer.class);
 
     private final KafkaTemplate<String, OsdEvent> kafkaTemplate;
     private final SeverityRouter router;
     private final AppProperties props;
-
-    public EventRoutingProducer(KafkaTemplate<String, OsdEvent> kafkaTemplate,
-                                SeverityRouter router,
-                                AppProperties props) {
-        this.kafkaTemplate = kafkaTemplate;
-        this.router = router;
-        this.props = props;
-    }
 
     public RoutingDecision publish(OsdEvent event) {
         RoutingDecision decision = router.route(event);

@@ -2,8 +2,7 @@ package com.rmsolutions.centinela.simulator;
 
 import com.rmsolutions.centinela.config.AppProperties;
 import com.rmsolutions.centinela.domain.OsdEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
@@ -20,9 +19,8 @@ import org.springframework.web.client.RestClient;
  */
 @Component
 @Profile("simulator")
+@Slf4j
 public class OsdSimulator implements CommandLineRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(OsdSimulator.class);
 
     private final ScenarioGenerator generator;
     private final AppProperties props;

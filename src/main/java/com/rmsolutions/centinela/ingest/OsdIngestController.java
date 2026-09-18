@@ -4,14 +4,13 @@ import com.rmsolutions.centinela.config.AppProperties;
 import com.rmsolutions.centinela.domain.OsdEvent;
 import com.rmsolutions.centinela.producer.EventRoutingProducer;
 import com.rmsolutions.centinela.routing.RoutingDecision;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * Webhook HTTP. El celular con OSD hace POST del JSON aqui.
@@ -28,17 +27,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/osd")
 @Profile("!simulator")
+@Slf4j
+@RequiredArgsConstructor
 public class OsdIngestController {
-
-    private static final Logger log = LoggerFactory.getLogger(OsdIngestController.class);
 
     private final EventRoutingProducer producer;
     private final AppProperties props;
-
-    public OsdIngestController(EventRoutingProducer producer, AppProperties props) {
-        this.producer = producer;
-        this.props = props;
-    }
 
     @PostMapping("/events")
     public ResponseEntity<Map<String, Object>> ingest(

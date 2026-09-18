@@ -5,10 +5,10 @@ import com.rmsolutions.centinela.config.Topics;
 import com.rmsolutions.centinela.domain.AlarmState;
 import com.rmsolutions.centinela.domain.OsdEvent;
 import com.rmsolutions.centinela.domain.Severity;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Traduce un evento OSD en una decision de ruteo.
@@ -21,13 +21,10 @@ import java.util.List;
  * @since 2026-09-18
  */
 @Component
+@RequiredArgsConstructor
 public class SeverityRouter {
 
     private final AppProperties props;
-
-    public SeverityRouter(AppProperties props) {
-        this.props = props;
-    }
 
     public RoutingDecision route(OsdEvent event) {
         AlarmState state = AlarmState.fromCode(event.alarmState());
