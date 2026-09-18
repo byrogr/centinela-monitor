@@ -1,0 +1,21 @@
+package com.centinela.routing;
+
+import com.centinela.domain.AlarmState;
+import com.centinela.domain.Severity;
+
+import java.util.List;
+
+/**
+ * Resultado de evaluar un evento: que severidad tiene y a que topicos va.
+ *
+ * @author Roger Rojas
+ * @since 2026-09-18
+ */
+public record RoutingDecision(
+        AlarmState alarmState,
+        Severity severity,
+        boolean watchDisconnected,
+        boolean lowBattery,
+        List<String> topics
+) {
+}

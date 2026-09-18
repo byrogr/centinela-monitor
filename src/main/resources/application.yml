@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: centinela-monitor
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Fiabilidad: no queremos perder una alerta critica.
+      acks: all
+      retries: 5
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      group-id: centinela-alert-consumer
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.centinela.domain"
+        spring.json.value.default.type: "com.centinela.domain.OsdEvent"
+    listener:
+      # Confirmamos offset por registro procesado (mas seguro para alertas).
+      ack-mode: record
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true   # habilita /actuator/health/liveness y /readiness (Azure)
+
+# ---- Configuracion de negocio de Centinela ----
+app:
+  # Identificador del nino monitoreado; se usa como clave de particion en Kafka
+  # para garantizar orden por-persona. En multi-paciente vendria del payload/token.
+  child-id: ${CHILD_ID:child-001}
+  # Secreto compartido que valida el webhook (cabecera X-OSD-Token). CAMBIAR en prod.
+  webhook-token: ${WEBHOOK_TOKEN:dev-local-secret-change-me}
+  # Umbral de bateria baja (%) que dispara una advertencia derivada.
+  low-battery-threshold: 15
+
+  simulator:
+    target-url: ${SIM_TARGET_URL:http://localhost:8080/api/v1/osd/events}
+    interval-ms: 2000
+    event-count: 30          # -1 para bucle infinito
+    scenario: SEIZURE        # NORMAL | SEIZURE | FALL | LOW_BATTERY | DISCONNECT | RANDOM
+
+logging:
+  level:
+    com.centinela: INFO

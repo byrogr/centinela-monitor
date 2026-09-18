@@ -1,0 +1,10 @@
+# Perfil "simulator": la app NO actua como backend.
+# Solo corre el emisor HTTP que imita al celular con OSD.
+spring:
+  main:
+    # No necesitamos servidor web: el simulador es un CLIENTE HTTP.
+    web-application-type: none
+  autoconfigure:
+    # No conectamos a Kafka en modo simulador (el simulador solo hace POST HTTP).
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
