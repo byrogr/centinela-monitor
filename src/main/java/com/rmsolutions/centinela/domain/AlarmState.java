@@ -1,4 +1,4 @@
-package com.centinela.domain;
+package com.rmsolutions.centinela.domain;
 
 /**
  * Traduce el 'alarmState' numerico de OSD a un valor semantico.

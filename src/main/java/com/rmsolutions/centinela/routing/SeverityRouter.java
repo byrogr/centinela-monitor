@@ -1,10 +1,10 @@
-package com.centinela.routing;
+package com.rmsolutions.centinela.routing;
 
-import com.centinela.config.AppProperties;
-import com.centinela.config.Topics;
-import com.centinela.domain.AlarmState;
-import com.centinela.domain.OsdEvent;
-import com.centinela.domain.Severity;
+import com.rmsolutions.centinela.config.AppProperties;
+import com.rmsolutions.centinela.config.Topics;
+import com.rmsolutions.centinela.domain.AlarmState;
+import com.rmsolutions.centinela.domain.OsdEvent;
+import com.rmsolutions.centinela.domain.Severity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

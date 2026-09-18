@@ -1,9 +1,9 @@
-package com.centinela.producer;
+package com.rmsolutions.centinela.producer;
 
-import com.centinela.config.AppProperties;
-import com.centinela.domain.OsdEvent;
-import com.centinela.routing.RoutingDecision;
-import com.centinela.routing.SeverityRouter;
+import com.rmsolutions.centinela.config.AppProperties;
+import com.rmsolutions.centinela.domain.OsdEvent;
+import com.rmsolutions.centinela.routing.RoutingDecision;
+import com.rmsolutions.centinela.routing.SeverityRouter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;

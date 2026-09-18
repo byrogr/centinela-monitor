@@ -1,4 +1,4 @@
-package com.centinela.domain;
+package com.rmsolutions.centinela.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

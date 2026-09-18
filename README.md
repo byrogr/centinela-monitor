@@ -1,9 +1,15 @@
-# Centinela — Monitoreo de eventos de epilepsia (FASE 1)
+# Lenzo — Acompañamiento y monitoreo de eventos de epilepsia
+
+> **Lenzo** es el nombre comercial. `centinela` es el nombre clave del proyecto y
+> es lo que verás en el código: artefacto `centinela-monitor`, paquete
+> `com.rmsolutions.centinela`, contenedores y base de datos `centinela-*`.
 
 Sistema de asistencia y monitoreo en tiempo real que procesa eventos de
-OpenSeizureDetector (OSD). Esta Fase 1 incluye el **simulador de eventos** y el
-**pipeline completo de backend** (webhook REST → ruteo por severidad → Kafka →
-consumidor de alertas), de modo que todo se valida **sin hardware real**.
+OpenSeizureDetector (OSD): webhook REST → ruteo por severidad → Kafka →
+persistencia y consumidores. El **simulador** permite validarlo todo **sin
+hardware real**.
+
+Estado: **Fase 2** (persistencia, historial y vigilante de silencio).
 
 > Aviso: este software es una capa de alerta **complementaria y redundante**.
 > No es un dispositivo médico ni sustituye supervisión clínica.
@@ -26,6 +32,20 @@ Levanta Kafka, PostgreSQL y Redis:
 | Redis      | 6379   | AOF activado                                     |
 
 Postgres y Redis tienen `healthcheck`: espera a que esten `healthy` antes de arrancar el backend.
+
+## 1.1 Base de datos
+
+Flyway aplica las migraciones al arrancar el backend. Hay dos ubicaciones:
+
+- `db/migration` — esquema (V1 relacional, V2 eventos particionados, V3 incidencias de silencio).
+- `db/seed` — datos de desarrollo (V4). **En produccion:** `FLYWAY_LOCATIONS=classpath:db/migration`
+  para que el seed nunca se aplique.
+
+API key del dispositivo de desarrollo (solo local): `lenzo-dev-child-001-0123456789abcdef`.
+La base guarda unicamente su SHA-256.
+
+La tabla `event` es append-only: un trigger rechaza `UPDATE` y `DELETE`. Para limpiar datos de
+prueba en local usa `TRUNCATE event`.
 
 ## 2. Compilar
 ```bash

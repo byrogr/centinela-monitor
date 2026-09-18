@@ -1,4 +1,4 @@
-package com.centinela.config;
+package com.rmsolutions.centinela.config;
 
 /**
  * Nombres de los topicos. Estrategia de ruteo por severidad:<br>

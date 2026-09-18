@@ -1,6 +1,6 @@
-package com.centinela.config;
+package com.rmsolutions.centinela.config;
 
-import com.centinela.simulator.Scenario;
+import com.rmsolutions.centinela.simulator.Scenario;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

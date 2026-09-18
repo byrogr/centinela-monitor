@@ -1,4 +1,4 @@
-package com.centinela.domain;
+package com.rmsolutions.centinela.domain;
 
 /**
  * Nivel de severidad derivado, independiente del vocabulario de OSD.

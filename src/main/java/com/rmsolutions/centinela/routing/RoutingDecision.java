@@ -1,7 +1,7 @@
-package com.centinela.routing;
+package com.rmsolutions.centinela.routing;
 
-import com.centinela.domain.AlarmState;
-import com.centinela.domain.Severity;
+import com.rmsolutions.centinela.domain.AlarmState;
+import com.rmsolutions.centinela.domain.Severity;
 
 import java.util.List;
 

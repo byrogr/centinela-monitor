@@ -1,6 +1,6 @@
-package com.centinela.simulator;
+package com.rmsolutions.centinela.simulator;
 
-import com.centinela.domain.OsdEvent;
+import com.rmsolutions.centinela.domain.OsdEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 

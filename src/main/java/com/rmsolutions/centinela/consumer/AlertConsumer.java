@@ -1,8 +1,8 @@
-package com.centinela.consumer;
+package com.rmsolutions.centinela.consumer;
 
-import com.centinela.config.Topics;
-import com.centinela.domain.OsdEvent;
-import com.centinela.notification.NotificationService;
+import com.rmsolutions.centinela.config.Topics;
+import com.rmsolutions.centinela.domain.OsdEvent;
+import com.rmsolutions.centinela.notification.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;

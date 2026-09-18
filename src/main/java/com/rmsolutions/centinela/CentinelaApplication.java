@@ -1,4 +1,4 @@
-package com.centinela;
+package com.rmsolutions.centinela;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

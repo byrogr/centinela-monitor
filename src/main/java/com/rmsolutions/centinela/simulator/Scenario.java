@@ -1,4 +1,4 @@
-package com.centinela.simulator;
+package com.rmsolutions.centinela.simulator;
 
 /**
  * Escenarios que el simulador puede reproducir.
