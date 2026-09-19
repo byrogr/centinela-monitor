@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * o de un KafkaTemplate y olvide su @Profile("!simulator") rompe el simulador
  * SIN romper la compilacion ni ningun otro test.
  *
- * Esta prueba es ese guard: levanta el contexto del simulador y nada mas.
+ * <p>Esta prueba es ese guard: levanta el contexto del simulador y nada mas.
  * No necesita contenedores, justamente porque ese perfil no toca infraestructura.
  *
  * @author Roger Rojas

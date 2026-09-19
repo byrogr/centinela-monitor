@@ -36,7 +36,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +45,7 @@ import static org.awaitility.Awaitility.await;
  * Recorrido completo del pipeline con la infraestructura real levantada:
  * PostgreSQL, Kafka y Redis en contenedores.
  *
- * Es la prueba que ninguna otra cubre. Las demas verifican piezas contra una base
+ * <p>Es la prueba que ninguna otra cubre. Las demas verifican piezas contra una base
  * o un Redis reales, pero saltandose Kafka; aqui el evento entra por HTTP en el
  * webhook y hay que esperarlo al otro lado, despues de haber recorrido el broker,
  * el consumidor de persistencia y el de alertas. Es donde aparecen los fallos de
@@ -165,7 +164,7 @@ class IngestPipelineE2ETest {
     /**
      * Eventos del historial cuyo payload lleva ese instante.
      *
-     * Las pruebas afirman sobre SU evento y nunca sobre el total: los eventos de
+     * <p>Las pruebas afirman sobre SU evento y nunca sobre el total: los eventos de
      * otras pruebas siguen recorriendo Kafka de forma asincrona, asi que contar
      * filas seria una carrera perdida de antemano.
      */

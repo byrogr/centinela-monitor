@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 /**
  * Dispara la revision del vigilante cada cierto tiempo.
  *
- * Adaptador de entrada: no decide nada, solo marca el ritmo.
+ * <p>Adaptador de entrada: no decide nada, solo marca el ritmo.
  *
- * Se usa fixedDelay y no fixedRate: si una pasada tarda mas de lo previsto,
+ * <p>Se usa fixedDelay y no fixedRate: si una pasada tarda mas de lo previsto,
  * fixedRate encolaria ejecuciones y acabarian solapandose sobre los mismos
  * dispositivos. El intervalo debe ser bastante menor que el umbral de silencio
  * (240s por defecto) para no sumar su propio retraso al aviso.

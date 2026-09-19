@@ -1,6 +1,5 @@
 package com.rmsolutions.centinela.ingestion.domain;
 
-import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
 import com.rmsolutions.centinela.shared.config.AppProperties;
 import com.rmsolutions.centinela.shared.domain.Severity;
 import com.rmsolutions.centinela.shared.kafka.Topics;

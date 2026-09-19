@@ -22,14 +22,14 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Caso de uso: guardar un evento de OSD en el registro inmutable.
- * <p>
- * Vive aqui y no dentro del consumidor de Kafka a proposito. Kafka es el medio
+ *
+ * <p>Vive aqui y no dentro del consumidor de Kafka a proposito. Kafka es el medio
  * por el que hoy llega el evento, no la razon de ser de esta logica: la misma
  * operacion la necesitara un reproceso manual o una importacion. El consumidor
  * queda como un adaptador fino que traduce un mensaje en una llamada a este
  * servicio.
- * <p>
- * La severidad NO se recalcula: se reutiliza el SeverityRouter de la ingesta,
+ *
+ * <p>La severidad NO se recalcula: se reutiliza el SeverityRouter de la ingesta,
  * para que lo que se guarda sea exactamente lo que se ruteo.
  *
  * @author Roger Rojas
@@ -105,8 +105,8 @@ public class EventPersistenceService {
 
     /**
      * Resuelve el dispositivo emisor.
-     * <p>
-     * La via buena es la cabecera que propaga el webhook, que ya autentico al
+     *
+     * <p>La via buena es la cabecera que propaga el webhook, que ya autentico al
      * dispositivo. El respaldo por paciente solo se usa con mensajes anteriores a
      * la tarea 7, que siguen en el topico con su retencion y deben poder
      * reprocesarse; con mas de un dispositivo activo ese respaldo no puede acertar.
@@ -162,13 +162,13 @@ public class EventPersistenceService {
     /**
      * Descarta un mensaje que no se puede persistir por un problema de datos o de
      * configuracion, no por una caida transitoria.
-     * <p>
-     * Se registra a ERROR y se deja que el consumidor confirme el offset en vez de
+     *
+     * <p>Se registra a ERROR y se deja que el consumidor confirme el offset en vez de
      * reintentar en bucle, por dos razones: reintentar no arregla un dato mal
      * formado, y bloquear la particion detendria la persistencia de TODOS los
      * eventos de ese nino.
-     * <p>
-     * Descartar aqui no silencia ninguna alerta: el evento sigue en 'osd.events.raw'
+     *
+     * <p>Descartar aqui no silencia ninguna alerta: el evento sigue en 'osd.events.raw'
      * con su retencion, listo para reprocesarse, y el camino critico que avisa a los
      * cuidadores corre por otro consumer group que no depende de esto.
      */

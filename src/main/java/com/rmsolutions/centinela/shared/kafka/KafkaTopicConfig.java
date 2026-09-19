@@ -11,7 +11,7 @@ import org.springframework.kafka.config.TopicBuilder;
  * replicas(1) es solo para local. En Azure Event Hubs / cluster real,
  * el factor de replicacion lo gestiona la plataforma (>=3).
  *
- * No aplica en perfil "simulator" (ese no habla con Kafka).
+ * <p>No aplica en perfil "simulator" (ese no habla con Kafka).
  *
  * @author Roger Rojas
  * @since 2026-09-18

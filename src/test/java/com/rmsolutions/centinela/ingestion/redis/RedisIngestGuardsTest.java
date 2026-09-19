@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Pruebas de los guardias de borde contra un Redis real.
  *
- * La semantica de INCR y SETNX con TTL es justo lo que hace que estos guardias
+ * <p>La semantica de INCR y SETNX con TTL es justo lo que hace que estos guardias
  * funcionen, y no se puede simular con un mock sin acabar probando el mock.
  *
  * @author Roger Rojas

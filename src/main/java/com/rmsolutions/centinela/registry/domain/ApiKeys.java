@@ -10,20 +10,20 @@ import java.util.HexFormat;
 /**
  * Generacion y hash de las API keys de dispositivo.
  *
- * Decisiones:
+ * <p>Decisiones:
  *
- *  1. SHA-256 en hexadecimal minusculas, NO bcrypt/argon2. Esas funciones existen
+ *  <p>1. SHA-256 en hexadecimal minusculas, NO bcrypt/argon2. Esas funciones existen
  *     para contrasenas elegidas por personas, que tienen poca entropia y hay que
  *     encarecer a fuerza de iteraciones. Aqui la clave la genera el sistema con 256
  *     bits de aleatoriedad criptografica: no hay diccionario que atacar. Y el
  *     webhook esta en la ruta critica de una alerta de emergencia, asi que un hash
  *     deliberadamente lento en cada peticion costaria latencia sin aportar nada.
  *
- *  2. El esquema debe coincidir EXACTAMENTE con el de la migracion V4, que calcula
+ *  <p>2. El esquema debe coincidir EXACTAMENTE con el de la migracion V4, que calcula
  *     el hash con encode(sha256(...), 'hex') de PostgreSQL. Hay una prueba que lo
  *     verifica contra la clave sembrada.
  *
- *  3. La clave en claro no se guarda en ningun sitio ni se registra en ningun log:
+ *  <p>3. La clave en claro no se guarda en ningun sitio ni se registra en ningun log:
  *     se devuelve una unica vez al emitirla.
  *
  * @author Roger Rojas

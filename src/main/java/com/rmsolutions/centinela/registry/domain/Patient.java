@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 /**
  * Menor monitoreado.
  *
- * PRIVACIDAD: se guarda solo el anio de nacimiento, nunca la fecha exacta.
+ * <p>PRIVACIDAD: se guarda solo el anio de nacimiento, nunca la fecha exacta.
  *
  * @author Roger Rojas
  * @since 2026-09-18

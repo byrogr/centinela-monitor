@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 /**
  * Convierte el campo 'Time' de OSD en un instante absoluto.
  *
- * OSD lo envia como texto local sin zona ("2026-09-18 00:05:32"), asi que hay
+ * <p>OSD lo envia como texto local sin zona ("2026-09-18 00:05:32"), asi que hay
  * que interpretarlo en la zona del celular. Esto NO es un detalle menor: un
  * desfase de horas haria que el vigilante de silencio calcule mal el tiempo sin
  * senal, o que un evento caiga en la particion mensual equivocada.
  *
- * Por eso la logica es explicita y con pruebas propias, en vez de un conversor
+ * <p>Por eso la logica es explicita y con pruebas propias, en vez de un conversor
  * generado o un parseo suelto dentro del consumidor.
  *
  * @author Roger Rojas
@@ -58,7 +58,7 @@ public class OsdTimeParser {
     /**
      * Operacion inversa: expresa un instante en el formato de texto de OSD.
      *
-     * La usa el vigilante de silencio para fabricar su evento sintetico. Va aqui y
+     * <p>La usa el vigilante de silencio para fabricar su evento sintetico. Va aqui y
      * no suelta en el vigilante para que leer y escribir usen SIEMPRE la misma zona:
      * si se separaran, un evento sintetico quedaria desplazado respecto a los reales.
      */

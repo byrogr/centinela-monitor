@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClient;
 /**
  * Simulador de eventos: sustituye al celular con OSD durante la Fase 1.
  *
- * Al arrancar con el perfil "simulator", genera eventos y los envia por HTTP
+ * <p>Al arrancar con el perfil "simulator", genera eventos y los envia por HTTP
  * al webhook del backend, imitando exactamente lo que hara el hardware real.
  * Asi probamos TODO el pipeline (ingesta -> ruteo -> Kafka -> consumidor)
  * sin ningun riesgo, antes de conectar el reloj.

@@ -1,7 +1,5 @@
 package com.rmsolutions.centinela.ingestion.domain;
 
-import com.rmsolutions.centinela.ingestion.domain.AlarmState;
-import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
 import com.rmsolutions.centinela.shared.config.AppProperties;
 import com.rmsolutions.centinela.shared.domain.Severity;
 import com.rmsolutions.centinela.shared.kafka.Topics;
@@ -13,7 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * Traduce un evento OSD en una decision de ruteo.
  *
- * Filosofia fail-safe: ante duda o degradacion (estado desconocido, reloj
+ * <p>Filosofia fail-safe: ante duda o degradacion (estado desconocido, reloj
  * desconectado, bateria baja) NUNCA se ignora; se escala al menos a WARNING.
  * Perder telemetria del reloj del nino es en si mismo motivo de aviso.
  *

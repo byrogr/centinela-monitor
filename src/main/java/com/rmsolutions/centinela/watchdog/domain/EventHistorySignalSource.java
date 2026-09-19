@@ -14,8 +14,8 @@ import java.util.Optional;
 
 /**
  * Respaldo: el historial de eventos.
- * <p>
- * Existe porque Redis es cache y puede estar caido o frio. Sin esta fuente, una
+ *
+ * <p>Existe porque Redis es cache y puede estar caido o frio. Sin esta fuente, una
  * caida de Redis dejaria al vigilante sin criterio justo cuando mas falta hace.
  *
  * @author Roger Rojas

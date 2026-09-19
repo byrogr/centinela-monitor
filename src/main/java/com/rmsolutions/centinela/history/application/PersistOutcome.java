@@ -2,8 +2,8 @@ package com.rmsolutions.centinela.history.application;
 
 /**
  * Resultado de intentar guardar un evento.
- * <p>
- * Es un sealed interface por coherencia con {@code IngestOutcome}: los dos flujos
+ *
+ * <p>Es un sealed interface por coherencia con {@code IngestOutcome}: los dos flujos
  * del pipeline reportan igual. Y sobre todo, obliga a quien llame a nombrar cada
  * desenlace en vez de mirar un boolean y adivinar por que fue false — un
  * duplicado descartado y un evento que no se pudo resolver no son lo mismo.

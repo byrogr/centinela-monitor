@@ -15,12 +15,12 @@ import lombok.Setter;
 /**
  * Incidencia de perdida de senal, abierta por el vigilante de silencio.
  *
- * Es la memoria DURABLE del vigilante: Redis solo guarda el last_seen, que es
+ * <p>Es la memoria DURABLE del vigilante: Redis solo guarda el last_seen, que es
  * cache volatil. Un indice unico parcial en la base garantiza como maximo una
  * incidencia abierta por dispositivo, de modo que el vigilante no repita la
  * alerta en cada ciclo del scheduler.
  *
- * Igual que {@link Event}, usa FK como UUID planos: la escribe una tarea de
+ * <p>Igual que {@link Event}, usa FK como UUID planos: la escribe una tarea de
  * fondo que no necesita navegar el grafo de entidades.
  *
  * @author Roger Rojas

@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Pruebas de las entidades y repositorios contra un PostgreSQL real.
  *
- * El valor de estas pruebas no es solo ejercitar los metodos: al correr con
+ * <p>El valor de estas pruebas no es solo ejercitar los metodos: al correr con
  * ddl-auto=validate sobre el esquema que crea Flyway, cualquier desajuste entre
  * una entidad y su tabla revienta aqui y no en produccion.
  *

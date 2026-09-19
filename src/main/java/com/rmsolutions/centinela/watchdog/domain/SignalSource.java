@@ -7,13 +7,13 @@ import java.util.Optional;
 
 /**
  * Una forma de averiguar cuando se supo por ultima vez de un dispositivo.
- * <p>
- * El vigilante consulta las fuentes EN ORDEN y se queda con la primera que
+ *
+ * <p>El vigilante consulta las fuentes EN ORDEN y se queda con la primera que
  * responde, de mas fresca a mas conservadora. Esta es la abstraccion que si se
  * gana su sitio: hay tres implementaciones reales, y anadir una cuarta (por
  * ejemplo, un ping del propio reloj) no obliga a tocar el vigilante.
- * <p>
- * Contrato: devolver vacio significa "no lo se", NUNCA "lleva mucho callado".
+ *
+ * <p>Contrato: devolver vacio significa "no lo se", NUNCA "lleva mucho callado".
  * Quien no sabe, deja pasar el turno a la siguiente fuente.
  *
  * @author Roger Rojas

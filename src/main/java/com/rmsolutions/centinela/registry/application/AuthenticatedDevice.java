@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Identidad de un dispositivo que acaba de autenticarse.
  *
- * Se devuelve un record y no la entidad {@code Device} a proposito: la relacion
+ * <p>Se devuelve un record y no la entidad {@code Device} a proposito: la relacion
  * con el paciente es LAZY y, con 'open-in-view: false', leerla fuera de la
  * transaccion de verificacion lanzaria LazyInitializationException en cada
  * peticion del webhook. Resolviendo aqui lo que la ingesta necesita, el problema
@@ -17,8 +17,7 @@ import java.util.UUID;
 public record AuthenticatedDevice(
         UUID deviceId,
         UUID patientId,
-        /** Clave de particion en Kafka: garantiza orden por paciente. */
-        String patientCode,
+        String patientCode, // Clave de particion en Kafka: garantiza orden por paciente.
         int silenceThresholdSeconds
 ) {
 }

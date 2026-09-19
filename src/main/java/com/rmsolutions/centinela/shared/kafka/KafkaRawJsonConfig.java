@@ -14,7 +14,7 @@ import org.springframework.kafka.listener.ContainerProperties;
 /**
  * Factory de listeners que entrega el mensaje como TEXTO, sin deserializar.
  *
- * El consumidor de persistencia lo necesita porque guarda el payload original en
+ * <p>El consumidor de persistencia lo necesita porque guarda el payload original en
  * la columna 'raw_payload'. Si recibiera un OsdEvent ya deserializado, re-serializarlo
  * perderia cualquier campo que OSD haya anadido en una version nueva: el record
  * declara @JsonIgnoreProperties(ignoreUnknown = true), asi que esos campos se

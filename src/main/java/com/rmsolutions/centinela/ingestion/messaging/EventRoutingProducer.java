@@ -18,10 +18,10 @@ import org.springframework.stereotype.Component;
  * Productor de Kafka. Recibe un evento, consulta al SeverityRouter y publica
  * el mensaje en los topicos correspondientes.
  *
- * La CLAVE del mensaje es el code del paciente: garantiza que todos los eventos
+ * <p>La CLAVE del mensaje es el code del paciente: garantiza que todos los eventos
  * de un mismo nino caigan en la misma particion y se procesen EN ORDEN.
  *
- * El dispositivo emisor viaja en una cabecera. Antes el consumidor de persistencia
+ * <p>El dispositivo emisor viaja en una cabecera. Antes el consumidor de persistencia
  * tenia que deducirlo del paciente, algo que no tiene solucion cuando hay mas de
  * un dispositivo activo; ahora el webhook, que ya lo autentico, lo propaga.
  *

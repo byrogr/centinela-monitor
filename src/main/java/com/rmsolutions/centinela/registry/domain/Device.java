@@ -18,7 +18,7 @@ import lombok.Setter;
 /**
  * Dispositivo emisor: el celular con OSD emparejado al reloj.
  *
- * SEGURIDAD: solo se guarda el hash de la API key. La clave en claro se muestra
+ * <p>SEGURIDAD: solo se guarda el hash de la API key. La clave en claro se muestra
  * una unica vez al emitirla y nunca se persiste, por eso 'apiKeyHash' no tiene setter.
  *
  * @author Roger Rojas

@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 /**
  * Pruebas de la decision de ingesta.
  *
- * Lo que mas importa aqui no son los caminos felices, sino que cada guardia falle
+ * <p>Lo que mas importa aqui no son los caminos felices, sino que cada guardia falle
  * hacia el lado correcto: la autenticacion CERRADA y los guardias de Redis ABIERTOS.
  *
  * @author Roger Rojas

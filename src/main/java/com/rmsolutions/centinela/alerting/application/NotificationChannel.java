@@ -5,8 +5,8 @@ import com.rmsolutions.centinela.shared.domain.Severity;
 
 /**
  * Una via por la que avisar a los cuidadores.
- * <p>
- * Esta abstracción si se gana su sitio: la Fase 3 traera llamada de voz, SMS y
+ *
+ * <p>Esta abstracción si se gana su sitio: la Fase 3 traera llamada de voz, SMS y
  * push, y cada una es una implementacion real con su proveedor y sus fallos.
  * Añadirlas no debe obligar a tocar el dispatcher ni el consumer de Kafka.
  *

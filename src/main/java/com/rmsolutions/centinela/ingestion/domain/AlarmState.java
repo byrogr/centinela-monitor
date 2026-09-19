@@ -3,7 +3,7 @@ package com.rmsolutions.centinela.ingestion.domain;
 /**
  * Traduce el 'alarmState' numerico de OSD a un valor semantico.
  *
- * IMPORTANTE: los codigos 0=OK, 1=WARNING, 2=ALARM, 3=FALL son los estandar de OSD.
+ * <p>IMPORTANTE: los codigos 0=OK, 1=WARNING, 2=ALARM, 3=FALL son los estandar de OSD.
  * Los codigos 5 (MANUAL) y 6 (MUTE) deben verificarse contra la version de OSD
  * que uses antes de conectar hardware real. Cualquier codigo no mapeado cae en
  * UNKNOWN y, por diseno fail-safe, se trata como algo que requiere atencion.

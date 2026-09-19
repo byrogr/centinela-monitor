@@ -32,7 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Pruebas del caso de uso de persistencia contra un PostgreSQL real.
  *
- * El servicio se prueba sin Kafka de por medio, que es justamente la ventaja de
+ * <p>El servicio se prueba sin Kafka de por medio, que es justamente la ventaja de
  * haberlo separado del consumidor: aqui se verifica la logica (resolucion,
  * idempotencia, fidelidad del payload). El recorrido completo con Kafka es la
  * tarea 10.

@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Consume los topicos de alerta y pide que se avise a los cuidadores.
- * <p>
- * Cada topico tiene su PROPIO groupId a proposito: un atasco procesando
+ *
+ * <p>Cada topico tiene su PROPIO groupId a proposito: un atasco procesando
  * advertencias no puede retrasar una emergencia. Son dos listeners separados por
  * eso, no por tener logica distinta; el camino de codigo es el mismo.
  *

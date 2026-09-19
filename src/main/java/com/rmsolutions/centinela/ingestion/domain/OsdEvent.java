@@ -6,10 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Representa un evento crudo emitido por OpenSeizureDetector (OSD).
  *
- * Se usa un 'record' inmutable: una vez recibido, el evento no debe mutar
+ * <p>Se usa un 'record' inmutable: una vez recibido, el evento no debe mutar
  * mientras viaja por el pipeline (auditabilidad de un sistema critico).
  *
- * Nota sobre 'Time': OSD lo envia con mayuscula inicial, por eso el @JsonProperty.
+ * <p>Nota sobre 'Time': OSD lo envia con mayuscula inicial, por eso el @JsonProperty.
  * Se ignoran campos desconocidos para tolerar cambios de version de OSD sin romper.
  *
  * @author Roger Rojas

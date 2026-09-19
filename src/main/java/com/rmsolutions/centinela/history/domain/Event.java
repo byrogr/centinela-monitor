@@ -19,17 +19,17 @@ import org.hibernate.type.SqlTypes;
 /**
  * Evento de OSD ya persistido. Es el registro consultable que alimentara el backoffice.
  *
- * Tres decisiones que se apartan del resto de entidades:
+ * <p>Tres decisiones que se apartan del resto de entidades:
  *
- *  1. {@code @Immutable} y ningun setter: la tabla es un log append-only y un
+ *  <p>1. {@code @Immutable} y ningun setter: la tabla es un log append-only y un
  *     trigger en la base rechaza UPDATE y DELETE. Marcarla asi evita que Hibernate
  *     intente siquiera un UPDATE por dirty-checking, que fallaria en la base.
  *
- *  2. FK como UUID planos en vez de {@code @ManyToOne}: esta es la ruta caliente
+ *  <p>2. FK como UUID planos en vez de {@code @ManyToOne}: esta es la ruta caliente
  *     (un evento cada pocos segundos por dispositivo) y solo necesitamos guardar
  *     el identificador. Cargar entidades completas seria trabajo inutil.
  *
- *  3. La ESCRITURA no pasa por esta entidad: va por el INSERT ... ON CONFLICT DO NOTHING
+ *  <p>3. La ESCRITURA no pasa por esta entidad: va por el INSERT ... ON CONFLICT DO NOTHING
  *     del repositorio, porque la idempotencia la garantiza la base, no el codigo.
  *
  * @author Roger Rojas

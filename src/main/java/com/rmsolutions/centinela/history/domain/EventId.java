@@ -9,7 +9,7 @@ import java.util.UUID;
 /**
  * Clave compuesta de {@link Event}.
  *
- * 'event_time' forma parte de la clave porque es la clave de particion:
+ * <p>'event_time' forma parte de la clave porque es la clave de particion:
  * PostgreSQL exige que toda restriccion unica de una tabla particionada la incluya.
  *
  * @author Roger Rojas

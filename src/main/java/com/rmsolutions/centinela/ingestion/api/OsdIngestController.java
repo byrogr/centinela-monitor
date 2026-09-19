@@ -19,15 +19,15 @@ import java.util.Map;
 /**
  * Webhook HTTP. El celular con OSD hace POST del JSON aqui.
  *
- * Adaptador de entrada: autentica y decide el codigo HTTP, nada mas. La logica
+ * <p>Adaptador de entrada: autentica y decide el codigo HTTP, nada mas. La logica
  * vive en {@link EventIngestionService}.
  *
- * Cada dispositivo se identifica con su propia credencial en la cabecera
+ * <p>Cada dispositivo se identifica con su propia credencial en la cabecera
  * 'X-Device-Key'. Sustituye al secreto compartido de la Fase 1, que era el mismo
  * para todos, venia con un valor por defecto en el yml y ademas dejaba pasar
  * cualquier peticion si se configuraba vacio.
  *
- * Se responde 202 rapido y el procesamiento sigue de forma asincrona: un webhook
+ * <p>Se responde 202 rapido y el procesamiento sigue de forma asincrona: un webhook
  * que tarda hace que el dispositivo reintente.
  *
  * @author Roger Rojas

@@ -14,32 +14,32 @@ import java.util.UUID;
 /**
  * Ultimo instante en que se supo de cada dispositivo.
  *
- * Lo escribe la INGESTA en cuanto autentica al dispositivo, con el instante de
+ * <p>Lo escribe la INGESTA en cuanto autentica al dispositivo, con el instante de
  * recepcion, y lo lee el vigilante de silencio para decidir si un reloj dejo de
  * emitir. Por eso vive en 'shared': es el punto de encuentro entre dos contextos,
  * no propiedad de ninguno.
  *
- * Se anota en la ingesta y no al persistir a proposito: si PostgreSQL se degrada,
+ * <p>Se anota en la ingesta y no al persistir a proposito: si PostgreSQL se degrada,
  * los eventos siguen llegando al webhook y las alertas criticas siguen saliendo
  * por Kafka. Anotarlo en la persistencia dejaria la marca congelada durante esa
  * averia y el vigilante abriria incidencias de silencio para relojes que SI estan
  * emitiendo, justo cuando el camino de alerta funciona con normalidad.
  *
- * DOS DECISIONES QUE NO SON OBVIAS:
+ * <p>DOS DECISIONES QUE NO SON OBVIAS:
  *
- *  1. La marca solo AVANZA. Un reproceso del topico de Kafka entrega eventos
+ *  <p>1. La marca solo AVANZA. Un reproceso del topico de Kafka entrega eventos
  *     antiguos, y escribirlos tal cual haria retroceder el last_seen: el vigilante
  *     creeria que el reloj lleva horas mudo y abriria una incidencia falsa justo
  *     cuando el dispositivo esta emitiendo con normalidad.
  *
- *  2. La marca NUNCA queda en el futuro. Un reloj mal configurado envia eventos
+ *  <p>2. La marca NUNCA queda en el futuro. Un reloj mal configurado envia eventos
  *     fechados por delante, y anotarlos tal cual dejaria al vigilante creyendo que
  *     se supo del dispositivo dentro de nueve horas: no alarmaria jamas, por mucho
  *     que el reloj enmudezca. Es el fallo hacia el lado inseguro, asi que se acota
  *     al momento actual. El evento en si NO se descarta: una convulsion tiene que
  *     alertar aunque el reloj vaya desfasado.
  *
- *  3. Una escritura fallida NO rompe la persistencia. El evento ya esta guardado,
+ *  <p>3. Una escritura fallida NO rompe la persistencia. El evento ya esta guardado,
  *     que es lo irreemplazable; Redis aqui es cache. Si falla, el vigilante se
  *     queda sin dato reciente y debera resolverlo por su cuenta (fail-safe),
  *     pero el historial no se pierde ni el consumidor entra en bucle de reintentos.
@@ -70,7 +70,7 @@ public class LastSeenStore {
      * Registra que se supo del dispositivo en ese instante, si es mas reciente
      * que lo que ya habia.
      *
-     * No hace falta atomicidad de lectura-escritura: todos los eventos de un
+     * <p>No hace falta atomicidad de lectura-escritura: todos los eventos de un
      * paciente comparten clave de particion en Kafka, asi que los procesa un
      * unico consumidor en orden.
      */

@@ -10,8 +10,8 @@ import java.util.List;
 
 /**
  * Reparte un aviso por todos los canales que lo admitan.
- * <p>
- * FAIL-SAFE: un canal que falla NO impide que los demas lo intenten. Si el
+ *
+ * <p>FAIL-SAFE: un canal que falla NO impide que los demas lo intenten. Si el
  * proveedor de SMS esta caido, la llamada de voz y el push tienen que salir
  * igual; propagar la excepcion del primero dejaria al cuidador sin ningun aviso
  * por culpa de un proveedor. Por eso cada entrega va en su propio try.

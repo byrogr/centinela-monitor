@@ -50,7 +50,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Pruebas del vigilante de silencio contra PostgreSQL y Redis reales.
  *
- * El estado del vigilante vive repartido entre los dos (incidencia durable en la
+ * <p>El estado del vigilante vive repartido entre los dos (incidencia durable en la
  * base, last_seen volatil en Redis) y el indice unico parcial que impide avisos
  * repetidos es una garantia de la base: con mocks no se estaria probando nada.
  *
@@ -127,7 +127,7 @@ class SilenceWatchServiceTest {
     /**
      * Fuerza la marca de last_seen a un momento concreto.
      *
-     * Hay que borrar la clave antes: el almacen es monotonico a proposito (no deja
+     * <p>Hay que borrar la clave antes: el almacen es monotonico a proposito (no deja
      * retroceder la marca) y las pruebas comparten Redis y dispositivo, asi que sin
      * esto una prueba anterior impediria a la siguiente simular un silencio.
      */

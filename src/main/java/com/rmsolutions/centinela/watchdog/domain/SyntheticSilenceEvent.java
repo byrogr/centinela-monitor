@@ -6,13 +6,13 @@ import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
 /**
  * Fabrica del evento que el vigilante inyecta cuando un reloj deja de emitir.
  *
- * El vigilante NO notifica por su cuenta: construye un evento y lo mete por el
+ * <p>El vigilante NO notifica por su cuenta: construye un evento y lo mete por el
  * mismo pipeline que los reales. Asi la alerta de "se perdio la senal" recorre
  * exactamente el mismo camino, se clasifica con el mismo SeverityRouter y queda
  * en el historial como cualquier otro evento. Una via paralela de notificacion
  * seria codigo que solo se ejercita en la emergencia, justo cuando no puede fallar.
  *
- * El evento se marca con dos senales que el router ya entiende:
+ * <p>El evento se marca con dos senales que el router ya entiende:
  *   - alarmState UNKNOWN: no sabemos en que estado esta el nino, y eso escala.
  *   - watchConnected=false: no estamos recibiendo del reloj.
  * Ambas llevan a WARNING por separado, asi que la clasificacion no depende de una sola.

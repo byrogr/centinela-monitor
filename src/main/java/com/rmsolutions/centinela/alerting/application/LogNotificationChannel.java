@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Canal de sustitucion mientras no hay proveedores reales (Fase 3).
- * <p>
- * Deja constancia en el log de lo que se enviaria. No es un canal de verdad, pero
+ *
+ * <p>Deja constancia en el log de lo que se enviaria. No es un canal de verdad, pero
  * mantiene el flujo completo ejercitado de punta a punta: cuando lleguen voz, SMS
  * y push, se anaden al lado de este sin tocar nada mas.
  *

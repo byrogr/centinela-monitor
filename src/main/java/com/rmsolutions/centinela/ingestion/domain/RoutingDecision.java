@@ -1,6 +1,5 @@
 package com.rmsolutions.centinela.ingestion.domain;
 
-import com.rmsolutions.centinela.ingestion.domain.AlarmState;
 import com.rmsolutions.centinela.shared.domain.Severity;
 import java.util.List;
 

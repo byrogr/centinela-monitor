@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Resultado de registrar un dispositivo.
  *
- * Es la UNICA vez que la API key en claro existe fuera del dispositivo. No se
+ * <p>Es la UNICA vez que la API key en claro existe fuera del dispositivo. No se
  * persiste, no se registra en logs y no hay forma de volver a consultarla: si se
  * pierde, el camino es revocar el dispositivo y registrar uno nuevo.
  *

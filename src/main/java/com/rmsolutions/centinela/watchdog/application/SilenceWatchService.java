@@ -24,18 +24,18 @@ import java.util.Optional;
 
 /**
  * Vigilante de silencio: avisa cuando un reloj deja de dar senal.
- * <p>
- * Es la otra mitad del sistema. Detectar una convulsion sirve de poco si el reloj
+ *
+ * <p>Es la otra mitad del sistema. Detectar una convulsion sirve de poco si el reloj
  * se apaga, se queda sin bateria o pierde el emparejamiento y nadie se entera:
  * el sistema pareceria estar funcionando mientras el nino esta sin supervision.
- * <p>
- * COMO SE DECIDE QUE HAY SILENCIO
+ *
+ * <p>COMO SE DECIDE QUE HAY SILENCIO
  * Se busca la ultima senal en tres sitios, en orden de frescura:
  *   1. Redis (last_seen), que anota la ingesta al recibir cada evento.
  *   2. La base, por si Redis esta caido o frio: el historial no miente.
  *   3. La fecha de alta del dispositivo, para un reloj que nunca llego a emitir.
- * <p>
- * El tercer paso importa mas de lo que parece: sin el, un dispositivo que nunca
+ *
+ * <p>El tercer paso importa mas de lo que parece: sin el, un dispositivo que nunca
  * conecto quedaria fuera de la vigilancia para siempre, que es precisamente el
  * fallo silencioso que este componente existe para evitar. Y usar su fecha de alta
  * como referencia le da el mismo margen que a cualquier otro, sin alarmar al
@@ -112,8 +112,8 @@ public class SilenceWatchService {
     /**
      * Ultima senal conocida, preguntando a las fuentes en orden y quedandose con
      * la primera que responde.
-     * <p>
-     * Se descarta cualquier instante futuro en vez de acotarlo: un timestamp por
+     *
+     * <p>Se descarta cualquier instante futuro en vez de acotarlo: un timestamp por
      * delante no es evidencia de nada, y tratarlo como "recien visto" seria el
      * fallo hacia el lado inseguro. Dejandolo caer, el turno pasa a una fuente
      * mas conservadora.
@@ -147,8 +147,8 @@ public class SilenceWatchService {
     /**
      * Inyecta el evento sintetico en el pipeline, con la misma clave de particion
      * y la misma cabecera de dispositivo que un evento real.
-     * <p>
-     * Publica directamente en Kafka, sin pasar por el webhook: si pasara por la
+     *
+     * <p>Publica directamente en Kafka, sin pasar por el webhook: si pasara por la
      * ingesta se anotaria el last_seen del dispositivo y el propio aviso de silencio
      * haria creer que el reloj volvio a hablar, cerrando la incidencia al instante.
      */

@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Ciclo de vida de las credenciales de un dispositivo: alta, verificacion y revocacion.
  *
- * SOBRE LA VERIFICACION Y EL FAIL-SAFE: este es el unico punto del sistema donde
+ * <p>SOBRE LA VERIFICACION Y EL FAIL-SAFE: este es el unico punto del sistema donde
  * "ante la duda, escalar" NO aplica. Aqui se falla CERRADO. Aceptar un dispositivo
  * que no se ha podido autenticar permitiria a cualquiera inyectar eventos, y el
  * peligro no es solo una alarma falsa: bastaria con inyectar telemetria "todo OK"
@@ -68,7 +68,7 @@ public class DeviceRegistryService {
     /**
      * Verifica una API key presentada por un dispositivo.
      *
-     * La busqueda es POR HASH contra un indice unico: la clave en claro no existe
+     * <p>La busqueda es POR HASH contra un indice unico: la clave en claro no existe
      * en la base, asi que no hay ninguna comparacion de secretos en memoria.
      *
      * @return la identidad del dispositivo si la clave es valida y esta activo;
@@ -92,7 +92,7 @@ public class DeviceRegistryService {
     /**
      * Revoca un dispositivo: deja de poder ingerir eventos de inmediato.
      *
-     * No se borra la fila: el historial de eventos apunta a ella y los eventos son
+     * <p>No se borra la fila: el historial de eventos apunta a ella y los eventos son
      * inmutables. Un dispositivo revocado sigue existiendo para que su historial
      * siga siendo legible.
      */

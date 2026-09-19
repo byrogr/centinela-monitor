@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 /**
  * Fabrica de eventos OSD sinteticos pero verosimiles.
  *
- * El escenario SEIZURE reproduce una LINEA DE TIEMPO clinica plausible en
+ * <p>El escenario SEIZURE reproduce una LINEA DE TIEMPO clinica plausible en
  * ciclos de 15 pasos: basal -> pre-ictal -> convulsion -> recuperacion.
  * Asi validamos que el pipeline detecta la transicion, no solo un valor aislado.
  *
- * Es 'stateful': lleva un contador de pasos y drena la bateria lentamente.
+ * <p>Es 'stateful': lleva un contador de pasos y drena la bateria lentamente.
  */
 @Component
 @Profile("simulator")

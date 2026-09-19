@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service;
  * Caso de uso de la ingesta: autentica el dispositivo, aplica los guardias de
  * borde y publica el evento en el pipeline.
  *
- * El orden de los pasos es deliberado:
+ * <p>El orden de los pasos es deliberado:
  *
- *  1. AUTENTICAR primero. Ni siquiera se cuenta trafico de quien no se identifica,
+ *  <p>1. AUTENTICAR primero. Ni siquiera se cuenta trafico de quien no se identifica,
  *     para que un desconocido no pueda consumir la cuota de un dispositivo real.
  *  2. LIMITAR despues. Protege al sistema de un bucle o un abuso.
  *  3. DEDUPLICAR al final, ya con la identidad del dispositivo, que es lo que

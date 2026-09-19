@@ -15,7 +15,7 @@ import org.springframework.data.repository.query.Param;
 /**
  * Acceso al log de eventos.
  *
- * El repositorio NO expone save(): escribir un evento va siempre por
+ * <p>El repositorio NO expone save(): escribir un evento va siempre por
  * {@link #insertIfAbsent}, que delega la idempotencia en la base.
  *
  * @author Roger Rojas
@@ -26,7 +26,7 @@ public interface EventRepository extends JpaRepository<Event, EventId> {
     /**
      * Inserta un evento de forma idempotente.
      *
-     * El ON CONFLICT hace que reprocesar el mismo mensaje de Kafka (un rebalanceo,
+     * <p>El ON CONFLICT hace que reprocesar el mismo mensaje de Kafka (un rebalanceo,
      * un reintento, un replay) no duplique nada. Es la base quien decide, no el
      * codigo: dos consumidores concurrentes con el mismo evento no pueden colarse
      * entre un SELECT y un INSERT porque aqui no hay SELECT previo.
@@ -72,7 +72,7 @@ public interface EventRepository extends JpaRepository<Event, EventId> {
     /**
      * Ultimo evento conocido de un dispositivo.
      *
-     * El vigilante de silencio usa Redis para el last_seen, pero si Redis esta
+     * <p>El vigilante de silencio usa Redis para el last_seen, pero si Redis esta
      * caido o frio esta consulta es el respaldo: preferimos preguntar a la base
      * antes que asumir un estado desconocido y no vigilar.
      */

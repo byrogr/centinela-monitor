@@ -18,7 +18,7 @@ import lombok.Setter;
 /**
  * Cuidador que recibe las alertas.
  *
- * La base exige email o telefono: un cuidador sin ningun canal de contacto
+ * <p>La base exige email o telefono: un cuidador sin ningun canal de contacto
  * seria un eslabon muerto en la cadena de escalado.
  *
  * @author Roger Rojas

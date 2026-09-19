@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * principios no negociables. No basta con que Flyway corra sin error: lo que
  * importa es que la base IMPIDA romper la inmutabilidad y la idempotencia.
  *
- * Se levanta un PostgreSQL real con Testcontainers porque nada de esto
+ * <p>Se levanta un PostgreSQL real con Testcontainers porque nada de esto
  * (particiones, triggers, indices parciales) existe en una base en memoria.
  *
  * @author Roger Rojas

@@ -12,11 +12,11 @@ import java.time.Duration;
 /**
  * Descarta en el borde un evento que ya se acepto, usando SETNX en Redis.
  *
- * Ahorra a todo el pipeline el trabajo de procesar el reintento de un dispositivo
+ * <p>Ahorra a todo el pipeline el trabajo de procesar el reintento de un dispositivo
  * con mala cobertura. NO es la garantia de idempotencia: esa la da el indice unico
  * sobre dedup_key en PostgreSQL, que es quien tiene la ultima palabra.
  *
- * Precisamente porque la base es la garantia real, aqui se puede fallar ABIERTO:
+ * <p>Precisamente porque la base es la garantia real, aqui se puede fallar ABIERTO:
  * si Redis no responde, el evento pasa y el duplicado se descarta mas abajo.
  *
  * @author Roger Rojas

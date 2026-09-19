@@ -3,7 +3,7 @@ package com.rmsolutions.centinela.shared.kafka;
 /**
  * Nombres de los topicos. Estrategia de ruteo por severidad:<br>
  *
- *  - RAW:       TODOS los eventos (traza de auditoria / replay / analitica).<br>
+ *  <p>- RAW:       TODOS los eventos (traza de auditoria / replay / analitica).<br>
  *  - TELEMETRY: eventos normales (latido, bateria OK, conectado).<br>
  *  - WARNING:   pre-ictal, bateria baja o reloj desconectado.<br>
  *  - CRITICAL:  convulsion / caida -> detona integraciones de emergencia.<br>

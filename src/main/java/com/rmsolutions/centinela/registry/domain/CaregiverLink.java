@@ -14,7 +14,7 @@ import lombok.Setter;
 /**
  * Relacion N:M cuidador-paciente con el orden de la cadena de escalado.
  *
- * 'escalation_order' es unico por paciente: a quien se avisa primero no puede
+ * <p>'escalation_order' es unico por paciente: a quien se avisa primero no puede
  * ser ambiguo cuando hay una emergencia.
  *
  * @author Roger Rojas
