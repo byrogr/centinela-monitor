@@ -1,7 +1,7 @@
 package com.rmsolutions.centinela.simulator;
 
-import com.rmsolutions.centinela.config.AppProperties;
-import com.rmsolutions.centinela.domain.OsdEvent;
+import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
+import com.rmsolutions.centinela.shared.config.AppProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -24,17 +24,18 @@ public class OsdSimulator implements CommandLineRunner {
 
     private final ScenarioGenerator generator;
     private final AppProperties props;
+    private final SimulatorProperties sim;
     private final RestClient client;
 
-    public OsdSimulator(ScenarioGenerator generator, AppProperties props) {
+    public OsdSimulator(ScenarioGenerator generator, AppProperties props, SimulatorProperties sim) {
         this.generator = generator;
         this.props = props;
+        this.sim = sim;
         this.client = RestClient.builder().build();
     }
 
     @Override
     public void run(String... args) {
-        AppProperties.Simulator sim = props.simulator();
         log.info("== SIMULADOR OSD == target={} escenario={} intervalo={}ms cantidad={}",
                 sim.targetUrl(), sim.scenario(), sim.intervalMs(), sim.eventCount());
 

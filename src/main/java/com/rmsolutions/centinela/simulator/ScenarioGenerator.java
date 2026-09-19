@@ -1,12 +1,11 @@
 package com.rmsolutions.centinela.simulator;
 
-import com.rmsolutions.centinela.domain.OsdEvent;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
-
+import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 /**
  * Fabrica de eventos OSD sinteticos pero verosimiles.

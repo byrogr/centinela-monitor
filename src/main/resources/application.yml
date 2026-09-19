@@ -45,8 +45,8 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.rmsolutions.centinela.domain"
-        spring.json.value.default.type: "com.rmsolutions.centinela.domain.OsdEvent"
+        spring.json.trusted.packages: "com.rmsolutions.centinela.ingestion.domain"
+        spring.json.value.default.type: "com.rmsolutions.centinela.ingestion.domain.OsdEvent"
         # Ignoramos la cabecera __TypeId__ que escribe el productor y usamos SIEMPRE
         # el tipo de arriba. Sin esto, un mensaje publicado antes de un renombrado de
         # paquete (o por otro productor) revienta al deserializar y el evento se pierde.
@@ -79,6 +79,8 @@ app:
   webhook-token: ${WEBHOOK_TOKEN:dev-local-secret-change-me}
   # Umbral de bateria baja (%) que dispara una advertencia derivada.
   low-battery-threshold: 15
+  # Debe coincidir con la zona del celular que corre OSD.
+  osd-time-zone: ${OSD_TIME_ZONE:America/Lima}
 
   simulator:
     target-url: ${SIM_TARGET_URL:http://localhost:8080/api/v1/osd/events}
