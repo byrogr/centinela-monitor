@@ -22,13 +22,13 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * Caso de uso: guardar un evento de OSD en el registro inmutable.
- *
+ * <p>
  * Vive aqui y no dentro del consumidor de Kafka a proposito. Kafka es el medio
  * por el que hoy llega el evento, no la razon de ser de esta logica: la misma
  * operacion la necesitara un reproceso manual o una importacion. El consumidor
  * queda como un adaptador fino que traduce un mensaje en una llamada a este
  * servicio.
- *
+ * <p>
  * La severidad NO se recalcula: se reutiliza el SeverityRouter de la ingesta,
  * para que lo que se guarda sea exactamente lo que se ruteo.
  *
@@ -37,8 +37,6 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Service
-// El perfil simulador no levanta JPA: sin esto, Spring intenta crear el servicio
-// alli y falla por falta de repositorios.
 @Profile("!simulator")
 @RequiredArgsConstructor
 public class EventPersistenceService {
@@ -58,10 +56,10 @@ public class EventPersistenceService {
      * @param deviceIdHeader dispositivo que el webhook autentico y propago. Puede
      *                       venir vacio en mensajes publicados antes de la tarea 7,
      *                       que siguen en el topico y deben poder reprocesarse.
-     * @return true si el evento se guardo; false si era duplicado o no se pudo resolver.
+     * @return el desenlace: guardado, duplicado o descartado con su motivo.
      */
     @Transactional
-    public boolean persist(String rawJson, String patientCode, String deviceIdHeader) {
+    public PersistOutcome persist(String rawJson, String patientCode, String deviceIdHeader) {
         OsdEvent event;
         try {
             event = jsonMapper.readValue(rawJson, OsdEvent.class);
@@ -77,7 +75,7 @@ public class EventPersistenceService {
 
         Optional<Device> device = resolveDevice(patientCode, deviceIdHeader);
         if (device.isEmpty()) {
-            return false;
+            return new PersistOutcome.Discarded("no se pudo resolver el dispositivo emisor");
         }
         UUID patientId = device.get().getPatient().getId();
 
@@ -98,16 +96,16 @@ public class EventPersistenceService {
 
         if (rows == 0) {
             log.debug("Evento duplicado descartado | paciente={} dedupKey={}", patientCode, dedupKey);
-            return false;
+            return new PersistOutcome.Duplicate(dedupKey);
         }
         log.debug("Evento persistido | paciente={} severidad={} dedupKey={}",
                 patientCode, severity, dedupKey);
-        return true;
+        return new PersistOutcome.Persisted(dedupKey);
     }
 
     /**
      * Resuelve el dispositivo emisor.
-     *
+     * <p>
      * La via buena es la cabecera que propaga el webhook, que ya autentico al
      * dispositivo. El respaldo por paciente solo se usa con mensajes anteriores a
      * la tarea 7, que siguen en el topico con su retencion y deben poder
@@ -164,18 +162,19 @@ public class EventPersistenceService {
     /**
      * Descarta un mensaje que no se puede persistir por un problema de datos o de
      * configuracion, no por una caida transitoria.
-     *
+     * <p>
      * Se registra a ERROR y se deja que el consumidor confirme el offset en vez de
      * reintentar en bucle, por dos razones: reintentar no arregla un dato mal
      * formado, y bloquear la particion detendria la persistencia de TODOS los
      * eventos de ese nino.
-     *
+     * <p>
      * Descartar aqui no silencia ninguna alerta: el evento sigue en 'osd.events.raw'
      * con su retencion, listo para reprocesarse, y el camino critico que avisa a los
      * cuidadores corre por otro consumer group que no depende de esto.
      */
-    private boolean discard(String childId, String reason, String rawJson) {
-        log.error("Evento sin persistir | childId={} motivo={} payload={}", childId, reason, rawJson);
-        return false;
+    private PersistOutcome discard(String patientCode, String reason, String rawJson) {
+        log.error("Evento sin persistir | paciente={} motivo={} payload={}",
+                patientCode, reason, rawJson);
+        return new PersistOutcome.Discarded(reason);
     }
 }

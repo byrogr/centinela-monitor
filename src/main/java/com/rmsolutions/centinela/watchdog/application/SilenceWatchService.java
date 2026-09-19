@@ -1,13 +1,12 @@
 package com.rmsolutions.centinela.watchdog.application;
 
-import com.rmsolutions.centinela.history.persistence.EventRepository;
 import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
 import com.rmsolutions.centinela.ingestion.messaging.EventRoutingProducer;
 import com.rmsolutions.centinela.registry.domain.Device;
 import com.rmsolutions.centinela.registry.persistence.DeviceRepository;
 import com.rmsolutions.centinela.shared.domain.DedupKeys;
 import com.rmsolutions.centinela.shared.domain.OsdTimeParser;
-import com.rmsolutions.centinela.shared.redis.LastSeenStore;
+import com.rmsolutions.centinela.watchdog.domain.SignalSource;
 import com.rmsolutions.centinela.watchdog.domain.SilenceIncident;
 import com.rmsolutions.centinela.watchdog.domain.SyntheticSilenceEvent;
 import com.rmsolutions.centinela.watchdog.persistence.SilenceIncidentRepository;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -50,15 +50,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SilenceWatchService {
 
-    /** Cuanto historial mira el respaldo contra la base. */
-    private static final Duration DB_LOOKBACK = Duration.ofDays(2);
-
     private final DeviceRepository devices;
     private final SilenceIncidentRepository incidents;
-    private final EventRepository events;
-    private final LastSeenStore lastSeen;
     private final EventRoutingProducer producer;
     private final OsdTimeParser timeParser;
+
+    /** Ordenadas por @Order, de la fuente mas fresca a la mas conservadora. */
+    private final List<SignalSource> signalSources;
 
     /**
      * Revisa todos los dispositivos activos. Lo llama el scheduler.
@@ -112,29 +110,21 @@ public class SilenceWatchService {
     }
 
     /**
-     * Ultima senal conocida. Nunca devuelve un instante futuro: un reloj
-     * desajustado no puede hacer creer al vigilante que ya se le oyo.
+     * Ultima senal conocida, preguntando a las fuentes en orden y quedandose con
+     * la primera que responde.
+     * <p>
+     * Se descarta cualquier instante futuro en vez de acotarlo: un timestamp por
+     * delante no es evidencia de nada, y tratarlo como "recien visto" seria el
+     * fallo hacia el lado inseguro. Dejandolo caer, el turno pasa a una fuente
+     * mas conservadora.
      */
     private Instant lastKnownSignal(Device device, Instant now) {
-        Optional<Instant> fromRedis = lastSeen.lastSeen(device.getId());
-        if (fromRedis.isPresent()) {
-            return min(fromRedis.get(), now);
-        }
-
-        log.debug("Sin last_seen en Redis para {}; se consulta el historial", device.getId());
-        Optional<Instant> fromDb = events
-                .findLastDeviceEvent(device.getId(), now.minus(DB_LOOKBACK))
-                .map(e -> e.getEventTime());
-        if (fromDb.isPresent()) {
-            return min(fromDb.get(), now);
-        }
-
-        // Nunca ha emitido: se cuenta desde que se dio de alta.
-        return min(device.getCreatedAt(), now);
-    }
-
-    private Instant min(Instant a, Instant b) {
-        return a.isBefore(b) ? a : b;
+        return signalSources.stream()
+                .map(source -> source.lastSignal(device, now))
+                .flatMap(Optional::stream)
+                .filter(instant -> !instant.isAfter(now))
+                .findFirst()
+                .orElse(device.getCreatedAt());
     }
 
     private boolean open(Device device, Instant reference, Duration silence, Instant now) {

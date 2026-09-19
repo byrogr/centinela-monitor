@@ -10,6 +10,9 @@ import com.rmsolutions.centinela.registry.persistence.PatientRepository;
 import com.rmsolutions.centinela.shared.config.AppProperties;
 import com.rmsolutions.centinela.shared.domain.OsdTimeParser;
 import com.rmsolutions.centinela.shared.redis.LastSeenStore;
+import com.rmsolutions.centinela.watchdog.domain.EventHistorySignalSource;
+import com.rmsolutions.centinela.watchdog.domain.LastSeenSignalSource;
+import com.rmsolutions.centinela.watchdog.domain.RegistrationSignalSource;
 import com.rmsolutions.centinela.watchdog.domain.SilenceIncident;
 import com.rmsolutions.centinela.watchdog.domain.SyntheticSilenceEvent;
 import com.rmsolutions.centinela.watchdog.persistence.SilenceIncidentRepository;
@@ -33,6 +36,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,8 +112,12 @@ class SilenceWatchServiceTest {
     void setUp() {
         producer = mock(EventRoutingProducer.class);
         watch = new SilenceWatchService(
-                devices, incidents, events, lastSeen, producer,
-                new OsdTimeParser(new AppProperties(15, "America/Lima")));
+                devices, incidents, producer,
+                new OsdTimeParser(new AppProperties(15, "America/Lima")),
+                // Mismo orden que @Order en produccion: Redis, historial, alta.
+                List.of(new LastSeenSignalSource(lastSeen),
+                        new EventHistorySignalSource(events),
+                        new RegistrationSignalSource()));
         patient = patients.findByCode("child-001").orElseThrow();
         device = devices.findByPatientId(patient.getId()).getFirst();
         // Redis no participa del rollback de @DataJpaTest: se limpia a mano.
