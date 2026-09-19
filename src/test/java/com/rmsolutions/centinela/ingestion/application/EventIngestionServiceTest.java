@@ -11,8 +11,10 @@ import com.rmsolutions.centinela.shared.config.AppProperties;
 import com.rmsolutions.centinela.ingestion.domain.AlarmState;
 import com.rmsolutions.centinela.shared.domain.DedupKeys;
 import com.rmsolutions.centinela.shared.domain.OsdTimeParser;
+import com.rmsolutions.centinela.shared.redis.LastSeenStore;
 import com.rmsolutions.centinela.shared.domain.Severity;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -22,10 +24,12 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -46,6 +50,7 @@ class EventIngestionServiceTest {
     private DeviceRateLimiter rateLimiter;
     private EdgeDeduplicator deduplicator;
     private EventRoutingProducer producer;
+    private LastSeenStore lastSeen;
     private EventIngestionService service;
 
     @BeforeEach
@@ -54,6 +59,7 @@ class EventIngestionServiceTest {
         rateLimiter = mock(DeviceRateLimiter.class);
         deduplicator = mock(EdgeDeduplicator.class);
         producer = mock(EventRoutingProducer.class);
+        lastSeen = mock(LastSeenStore.class);
 
         AuthenticatedDevice device =
                 new AuthenticatedDevice(DEVICE_ID, UUID.randomUUID(), "child-001", 240);
@@ -68,11 +74,57 @@ class EventIngestionServiceTest {
 
         AppProperties props = new AppProperties(15, "America/Lima");
         service = new EventIngestionService(
-                registry, rateLimiter, deduplicator, producer, new OsdTimeParser(props));
+                registry, rateLimiter, deduplicator, producer, new OsdTimeParser(props), lastSeen);
     }
 
     private OsdEvent event(String time) {
         return new OsdEvent(time, 2, "ALARM", 5.4, 1250.3, 4500.1, 3800.8, 134, 88, true);
+    }
+
+    @Test
+    void anAuthenticatedRequestRecordsThatTheDeviceWasSeen() {
+        service.ingest(VALID_KEY, event("2026-09-18 00:05:32"));
+
+        verify(lastSeen).record(eq(DEVICE_ID), any(Instant.class));
+    }
+
+    @Test
+    void theMarkUsesTheReceptionTimeAndNotTheClockOfTheDevice() {
+        Instant before = Instant.now();
+        // El dispositivo declara una hora de hace dos dias; la marca no debe seguirla.
+        service.ingest(VALID_KEY, event("2026-09-16 00:05:32"));
+
+        ArgumentCaptor<Instant> captured = ArgumentCaptor.forClass(Instant.class);
+        verify(lastSeen).record(eq(DEVICE_ID), captured.capture());
+
+        assertThat(captured.getValue())
+                .as("lo que importa es que nos sigue hablando, no que hora cree que es")
+                .isBetween(before, Instant.now());
+    }
+
+    @Test
+    void aThrottledEventStillProvesTheDeviceIsAlive() {
+        when(rateLimiter.allow(DEVICE_ID)).thenReturn(false);
+
+        service.ingest(VALID_KEY, event("2026-09-18 00:05:32"));
+
+        verify(lastSeen).record(eq(DEVICE_ID), any(Instant.class));
+    }
+
+    @Test
+    void aResentEventStillProvesTheDeviceIsAlive() {
+        when(deduplicator.markAsSeen(anyString())).thenReturn(false);
+
+        service.ingest(VALID_KEY, event("2026-09-18 00:05:32"));
+
+        verify(lastSeen).record(eq(DEVICE_ID), any(Instant.class));
+    }
+
+    @Test
+    void unauthenticatedTrafficCannotKeepTheWatchdogQuiet() {
+        service.ingest("clave-que-no-existe", event("2026-09-18 00:05:32"));
+
+        verifyNoInteractions(lastSeen);
     }
 
     @Test

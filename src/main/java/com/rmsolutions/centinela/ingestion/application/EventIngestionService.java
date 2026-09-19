@@ -9,6 +9,7 @@ import com.rmsolutions.centinela.registry.application.DeviceRegistryService;
 import com.rmsolutions.centinela.registry.application.AuthenticatedDevice;
 import com.rmsolutions.centinela.shared.domain.DedupKeys;
 import com.rmsolutions.centinela.shared.domain.OsdTimeParser;
+import com.rmsolutions.centinela.shared.redis.LastSeenStore;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,7 @@ public class EventIngestionService {
     private final EdgeDeduplicator deduplicator;
     private final EventRoutingProducer producer;
     private final OsdTimeParser timeParser;
+    private final LastSeenStore lastSeen;
 
     public IngestOutcome ingest(String apiKey, OsdEvent event) {
         Optional<AuthenticatedDevice> device = registry.verify(apiKey);
@@ -52,6 +54,16 @@ public class EventIngestionService {
         }
 
         AuthenticatedDevice sender = device.get();
+
+        // Se anota el INSTANTE DE RECEPCION, no la hora que declara el dispositivo.
+        // Es lo que el vigilante necesita saber ("¿nos sigue hablando este reloj?")
+        // y ademas lo inmuniza contra un celular con el reloj desajustado.
+        //
+        // Va aqui, despues de autenticar y antes de cualquier otro guardia: aunque
+        // el evento acabe descartado por cuota o por duplicado, el dispositivo ha
+        // demostrado que sigue emitiendo. Lo que no puede hacerlo es trafico sin
+        // credencial, o cualquiera podria mantener callado al vigilante.
+        lastSeen.record(sender.deviceId(), Instant.now());
 
         if (!rateLimiter.allow(sender.deviceId())) {
             return new IngestOutcome.RateLimited();

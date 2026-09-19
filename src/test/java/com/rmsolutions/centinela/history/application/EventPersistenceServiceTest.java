@@ -114,6 +114,9 @@ class EventPersistenceServiceTest {
         assertThat(history()).isEmpty();
     }
 
+
+
+
     private String payload(String time, int alarmState, String extra) {
         return """
                 {"Time":"%s","alarmState":%d,"alarmPhrase":"ALARM","maxFreq":5.4,"maxVal":1250.3,\
