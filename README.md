@@ -48,6 +48,24 @@ el secreto compartido `X-OSD-Token` de la Fase 1 ya no existe.
 La tabla `event` es append-only: un trigger rechaza `UPDATE` y `DELETE`. Para limpiar datos de
 prueba en local usa `TRUNCATE event`.
 
+## 1.2 Vigilante de silencio
+
+Avisa cuando un reloj deja de emitir. Corre como tarea programada:
+
+| Propiedad | Default | Qué es |
+|---|---|---|
+| `app.watchdog.check-interval-ms` | 30000 | cada cuánto revisa |
+| `app.watchdog.initial-delay-ms` | 20000 | margen al arrancar |
+| `device.silence_threshold_seconds` | 240 | por dispositivo, en la BD |
+
+No notifica por su cuenta: inyecta un evento sintético (`alarmPhrase = SILENCE`) en el mismo
+pipeline que los eventos reales, así que lo clasifica el mismo `SeverityRouter` y queda en el
+historial. Para probarlo sin esperar, baja el umbral:
+
+```sql
+UPDATE device SET silence_threshold_seconds = 60;
+```
+
 ## 2. Compilar
 ```bash
 mvn clean package

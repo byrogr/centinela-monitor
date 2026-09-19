@@ -85,6 +85,15 @@ app:
     # reintentos del dispositivo. La deduplicacion definitiva la hace PostgreSQL.
     dedup-ttl-seconds: ${INGEST_DEDUP_TTL_SECONDS:300}
 
+  # ---- Vigilante de silencio (Fase 2) ----
+  watchdog:
+    # Debe ser bastante menor que device.silence_threshold_seconds (240s por
+    # defecto): el intervalo se suma al retraso con el que se detecta el silencio.
+    check-interval-ms: ${WATCHDOG_INTERVAL_MS:30000}
+    # Margen al arrancar, para que la ingesta y Redis esten listos antes de la
+    # primera pasada y no se abran incidencias por un arranque en frio.
+    initial-delay-ms: ${WATCHDOG_INITIAL_DELAY_MS:20000}
+
   simulator:
     target-url: ${SIM_TARGET_URL:http://localhost:8080/api/v1/osd/events}
     # API key del dispositivo de desarrollo que siembra la migracion V4.

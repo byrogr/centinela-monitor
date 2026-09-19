@@ -55,6 +55,17 @@ public class OsdTimeParser {
         }
     }
 
+    /**
+     * Operacion inversa: expresa un instante en el formato de texto de OSD.
+     *
+     * La usa el vigilante de silencio para fabricar su evento sintetico. Va aqui y
+     * no suelta en el vigilante para que leer y escribir usen SIEMPRE la misma zona:
+     * si se separaran, un evento sintetico quedaria desplazado respecto a los reales.
+     */
+    public String toOsdTime(Instant instant) {
+        return FORMAT.format(instant.atZone(zone));
+    }
+
     public ZoneId zone() {
         return zone;
     }
