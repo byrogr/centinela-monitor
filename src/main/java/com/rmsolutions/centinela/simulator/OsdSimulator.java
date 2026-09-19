@@ -1,7 +1,6 @@
 package com.rmsolutions.centinela.simulator;
 
 import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
-import com.rmsolutions.centinela.shared.config.AppProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -23,13 +22,11 @@ import org.springframework.web.client.RestClient;
 public class OsdSimulator implements CommandLineRunner {
 
     private final ScenarioGenerator generator;
-    private final AppProperties props;
     private final SimulatorProperties sim;
     private final RestClient client;
 
-    public OsdSimulator(ScenarioGenerator generator, AppProperties props, SimulatorProperties sim) {
+    public OsdSimulator(ScenarioGenerator generator, SimulatorProperties sim) {
         this.generator = generator;
-        this.props = props;
         this.sim = sim;
         this.client = RestClient.builder().build();
     }
@@ -47,7 +44,7 @@ public class OsdSimulator implements CommandLineRunner {
             try {
                 client.post()
                         .uri(sim.targetUrl())
-                        .header("X-OSD-Token", props.webhookToken())
+                        .header("X-Device-Key", sim.apiKey())
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(event)
                         .retrieve()

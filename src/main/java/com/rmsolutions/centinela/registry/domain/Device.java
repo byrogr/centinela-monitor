@@ -80,8 +80,8 @@ public class Device {
      * Revoca el dispositivo. Se hace por metodo y no por setters sueltos para que
      * 'active' y 'revokedAt' no puedan quedar en un estado incoherente.
      */
-    public void revocar(Instant cuando) {
+    public void revoke(Instant when) {
         this.active = false;
-        this.revokedAt = cuando;
+        this.revokedAt = when;
     }
 }

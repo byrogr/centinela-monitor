@@ -1,4 +1,4 @@
-package com.rmsolutions.centinela.history.domain;
+package com.rmsolutions.centinela.shared.domain;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * Calculo de la clave de deduplicacion de un evento.
  *
- * Vive en un unico sitio A PROPOSITO: el consumidor de persistencia la calcula
+ * Vive en 'shared' y en un unico sitio A PROPOSITO: el consumidor de persistencia la calcula
  * al guardar y el webhook la calculara en el borde (tarea 7) para el SETNX de
  * Redis. Si cada uno la derivara por su cuenta y difirieran en un detalle, la
  * idempotencia se romperia sin que nada avisara.
@@ -25,7 +25,7 @@ public final class DedupKeys {
      * Se usa el epoch en milisegundos y no un texto con formato: un mismo instante
      * siempre produce la misma clave, sin depender de locale ni de zona horaria.
      */
-    public static String de(UUID deviceId, Instant eventTime, int alarmState) {
+    public static String of(UUID deviceId, Instant eventTime, int alarmState) {
         return deviceId + "|" + eventTime.toEpochMilli() + "|" + alarmState;
     }
 }

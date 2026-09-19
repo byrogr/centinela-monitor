@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Roger Rojas
  * @since 2026-09-18
  */
-class EsquemaMigracionesTest {
+class SchemaMigrationsTest {
 
     // Misma version que docker-compose.yml: probamos contra lo que corremos.
     private static final PostgreSQLContainer POSTGRES =
@@ -51,7 +51,7 @@ class EsquemaMigracionesTest {
     }
 
     @AfterAll
-    static void cerrar() throws SQLException {
+    static void close() throws SQLException {
         if (conn != null) {
             conn.close();
         }
@@ -59,8 +59,8 @@ class EsquemaMigracionesTest {
     }
 
     @Test
-    void laTablaEventEstaParticionadaYTieneParticionPorDefecto() throws SQLException {
-        assertThat(unEntero("""
+    void theEventTableIsPartitionedAndHasADefaultPartition() throws SQLException {
+        assertThat(number("""
                 SELECT count(*) FROM pg_class c
                   JOIN pg_inherits i ON i.inhrelid = c.oid
                  WHERE i.inhparent = 'event'::regclass
@@ -69,71 +69,71 @@ class EsquemaMigracionesTest {
                 .as("particiones mensuales creadas por adelantado")
                 .isGreaterThanOrEqualTo(12);
 
-        assertThat(unTexto("SELECT to_regclass('event_default')::text"))
+        assertThat(text("SELECT to_regclass('event_default')::text"))
                 .as("particion por defecto: un evento fuera de rango no se pierde")
                 .isEqualTo("event_default");
     }
 
     @Test
-    void elEventoEsAppendOnly() throws SQLException {
-        insertarEvento("dk-append-only");
+    void theEventTableIsAppendOnly() throws SQLException {
+        insertEvent("dk-append-only");
 
-        assertThatThrownBy(() -> ejecutar("UPDATE event SET heart_rate = 999 WHERE dedup_key = 'dk-append-only'"))
+        assertThatThrownBy(() -> execute("UPDATE event SET heart_rate = 999 WHERE dedup_key = 'dk-append-only'"))
                 .hasMessageContaining("append-only");
 
-        assertThatThrownBy(() -> ejecutar("DELETE FROM event WHERE dedup_key = 'dk-append-only'"))
+        assertThatThrownBy(() -> execute("DELETE FROM event WHERE dedup_key = 'dk-append-only'"))
                 .hasMessageContaining("append-only");
     }
 
     @Test
-    void laDedupKeyImpideDuplicarUnEvento() throws SQLException {
-        insertarEvento("dk-idempotente");
-        insertarEvento("dk-idempotente");
+    void theDedupKeyPreventsDuplicatingAnEvent() throws SQLException {
+        insertEvent("dk-idempotente");
+        insertEvent("dk-idempotente");
 
-        assertThat(unEntero("SELECT count(*) FROM event WHERE dedup_key = 'dk-idempotente'"))
+        assertThat(number("SELECT count(*) FROM event WHERE dedup_key = 'dk-idempotente'"))
                 .as("el segundo INSERT no debe crear una fila nueva")
                 .isEqualTo(1);
     }
 
     @Test
-    void soloSePuedeTenerUnaIncidenciaDeSilencioAbiertaPorDispositivo() throws SQLException {
+    void onlyOneOpenSilenceIncidentPerDeviceIsAllowed() throws SQLException {
         String sql = """
                 INSERT INTO silence_incident (device_id, patient_id, threshold_seconds)
                 VALUES ('00000000-0000-0000-0000-0000000000d1',
                         '00000000-0000-0000-0000-0000000000b1', 240)
                 """;
-        ejecutar(sql);
+        execute(sql);
 
-        assertThatThrownBy(() -> ejecutar(sql))
+        assertThatThrownBy(() -> execute(sql))
                 .as("sin esto el vigilante repetiria la alerta en cada ciclo")
-                .hasMessageContaining("idx_silence_incident_abierta_por_device");
+                .hasMessageContaining("idx_silence_incident_open_per_device");
 
         // Al cerrarla, el dispositivo puede volver a entrar en silencio mas adelante.
-        ejecutar("UPDATE silence_incident SET closed_at = now() WHERE closed_at IS NULL");
-        ejecutar(sql);
+        execute("UPDATE silence_incident SET closed_at = now() WHERE closed_at IS NULL");
+        execute(sql);
     }
 
     @Test
-    void elSeedGuardaSoloElHashDeLaApiKey() throws SQLException {
-        assertThat(unTexto("SELECT api_key_hash FROM device LIMIT 1"))
-                .as("la clave en claro no puede estar en la base")
+    void theSeedStoresOnlyTheApiKeyHash() throws SQLException {
+        assertThat(text("SELECT api_key_hash FROM device LIMIT 1"))
+                .as("la key en claro no puede estar en la base")
                 .isNotEqualTo("lenzo-dev-child-001-0123456789abcdef")
-                .isEqualTo(unTexto("""
+                .isEqualTo(text("""
                         SELECT encode(sha256(convert_to('lenzo-dev-child-001-0123456789abcdef','UTF8')),'hex')
                         """));
     }
 
     @Test
-    void elPacienteDeDesarrolloUsaElChildIdDeLaFase1() throws SQLException {
-        assertThat(unTexto("SELECT code FROM patient LIMIT 1"))
-                .as("es la clave de particion de Kafka; el consumidor la usa para resolver el paciente")
+    void theDevPatientUsesThePhaseOneChildId() throws SQLException {
+        assertThat(text("SELECT code FROM patient LIMIT 1"))
+                .as("es la key de particion de Kafka; el consumidor la usa para resolver el patient")
                 .isEqualTo("child-001");
     }
 
     // ---- utilidades ----
 
-    private void insertarEvento(String dedupKey) throws SQLException {
-        ejecutar("""
+    private void insertEvent(String dedupKey) throws SQLException {
+        execute("""
                 INSERT INTO event (device_id, patient_id, event_time, alarm_state, severity,
                                    heart_rate, battery_level, watch_connected, raw_payload, dedup_key)
                 VALUES ('00000000-0000-0000-0000-0000000000d1',
@@ -144,20 +144,20 @@ class EsquemaMigracionesTest {
                 """.formatted("2026-09-18T12:00:00Z", dedupKey));
     }
 
-    private void ejecutar(String sql) throws SQLException {
+    private void execute(String sql) throws SQLException {
         try (Statement st = conn.createStatement()) {
             st.execute(sql);
         }
     }
 
-    private int unEntero(String sql) throws SQLException {
+    private int number(String sql) throws SQLException {
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
             rs.next();
             return rs.getInt(1);
         }
     }
 
-    private String unTexto(String sql) throws SQLException {
+    private String text(String sql) throws SQLException {
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
             rs.next();
             return rs.getString(1);

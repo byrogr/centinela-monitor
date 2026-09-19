@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SeverityRouterTest {
 
     private final SeverityRouter router =
-            new SeverityRouter(new AppProperties("child-001", "token", 15, "America/Lima"));
+            new SeverityRouter(new AppProperties(15, "America/Lima"));
 
     private OsdEvent event(int alarmState, Integer battery, Boolean connected) {
         return new OsdEvent("2026-09-18 00:05:32", alarmState, "X",
@@ -22,26 +22,26 @@ class SeverityRouterTest {
     }
 
     @Test
-    void alarma_esCritica_yVaAlTopicoCritico() {
+    void alarm_isCritical_andGoesToTheCriticalTopic() {
         RoutingDecision d = router.route(event(2, 90, true));
         assertThat(d.severity()).isEqualTo(Severity.CRITICAL);
         assertThat(d.topics()).contains(Topics.RAW, Topics.CRITICAL);
     }
 
     @Test
-    void caida_esCritica() {
+    void fall_isCritical() {
         assertThat(router.route(event(3, 90, true)).severity()).isEqualTo(Severity.CRITICAL);
     }
 
     @Test
-    void estadoOk_esInfo_yVaATelemetria() {
+    void okState_isInfo_andGoesToTelemetry() {
         RoutingDecision d = router.route(event(0, 90, true));
         assertThat(d.severity()).isEqualTo(Severity.INFO);
         assertThat(d.topics()).contains(Topics.RAW, Topics.TELEMETRY);
     }
 
     @Test
-    void relojDesconectado_escalaAWarning_aunqueEstadoSeaOk() {
+    void disconnectedWatch_escalatesToWarning_evenWhenStateIsOk() {
         RoutingDecision d = router.route(event(0, 90, false));
         assertThat(d.severity()).isEqualTo(Severity.WARNING);
         assertThat(d.watchDisconnected()).isTrue();
@@ -49,14 +49,14 @@ class SeverityRouterTest {
     }
 
     @Test
-    void bateriaBaja_escalaAWarning() {
+    void lowBattery_escalatesToWarning() {
         RoutingDecision d = router.route(event(0, 10, true));
         assertThat(d.severity()).isEqualTo(Severity.WARNING);
         assertThat(d.lowBattery()).isTrue();
     }
 
     @Test
-    void estadoDesconocido_escalaAWarning_porFailSafe() {
+    void unknownState_escalatesToWarning_byFailSafe() {
         RoutingDecision d = router.route(event(99, 90, true));
         assertThat(d.severity()).isEqualTo(Severity.WARNING);
     }

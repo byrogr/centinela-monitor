@@ -16,7 +16,7 @@ import org.springframework.data.repository.query.Param;
  * Acceso al log de eventos.
  *
  * El repositorio NO expone save(): escribir un evento va siempre por
- * {@link #insertarSiNoExiste}, que delega la idempotencia en la base.
+ * {@link #insertIfAbsent}, que delega la idempotencia en la base.
  *
  * @author Roger Rojas
  * @since 2026-09-18
@@ -41,7 +41,7 @@ public interface EventRepository extends JpaRepository<Event, EventId> {
                     :heartRate, :batteryLevel, :watchConnected, CAST(:rawPayload AS jsonb), :dedupKey)
             ON CONFLICT (dedup_key, event_time) DO NOTHING
             """, nativeQuery = true)
-    int insertarSiNoExiste(@Param("deviceId") UUID deviceId,
+    int insertIfAbsent(@Param("deviceId") UUID deviceId,
                            @Param("patientId") UUID patientId,
                            @Param("eventTime") Instant eventTime,
                            @Param("alarmState") int alarmState,
@@ -60,13 +60,13 @@ public interface EventRepository extends JpaRepository<Event, EventId> {
     @Query("""
             SELECT e FROM Event e
              WHERE e.patientId = :patientId
-               AND e.id.eventTime >= :desde
-               AND e.id.eventTime < :hasta
+               AND e.id.eventTime >= :from
+               AND e.id.eventTime < :to
              ORDER BY e.id.eventTime DESC
             """)
-    List<Event> historialDePaciente(@Param("patientId") UUID patientId,
-                                    @Param("desde") Instant desde,
-                                    @Param("hasta") Instant hasta,
+    List<Event> findPatientHistory(@Param("patientId") UUID patientId,
+                                    @Param("from") Instant from,
+                                    @Param("to") Instant to,
                                     Pageable pageable);
 
     /**
@@ -79,10 +79,10 @@ public interface EventRepository extends JpaRepository<Event, EventId> {
     @Query("""
             SELECT e FROM Event e
              WHERE e.deviceId = :deviceId
-               AND e.id.eventTime >= :desde
+               AND e.id.eventTime >= :from
              ORDER BY e.id.eventTime DESC
              LIMIT 1
             """)
-    Optional<Event> ultimoEventoDeDispositivo(@Param("deviceId") UUID deviceId,
-                                              @Param("desde") Instant desde);
+    Optional<Event> findLastDeviceEvent(@Param("deviceId") UUID deviceId,
+                                              @Param("from") Instant from);
 }

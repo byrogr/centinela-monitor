@@ -1,6 +1,7 @@
 package com.rmsolutions.centinela.history.messaging;
 
 import com.rmsolutions.centinela.history.application.EventPersistenceService;
+import com.rmsolutions.centinela.shared.kafka.EventHeaders;
 import com.rmsolutions.centinela.shared.kafka.KafkaRawJsonConfig;
 import com.rmsolutions.centinela.shared.kafka.Topics;
 import lombok.RequiredArgsConstructor;
@@ -31,16 +32,17 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class EventPersistenceConsumer {
 
-    public static final String GRUPO = "centinela-persistence";
+    public static final String GROUP = "centinela-persistence";
 
-    private final EventPersistenceService persistencia;
+    private final EventPersistenceService persistence;
 
     @KafkaListener(
             topics = Topics.RAW,
-            groupId = GRUPO,
+            groupId = GROUP,
             containerFactory = KafkaRawJsonConfig.FACTORY)
-    public void alRecibirEvento(@Payload String rawJson,
-                                @Header(KafkaHeaders.RECEIVED_KEY) String childId) {
-        persistencia.persistir(rawJson, childId);
+    public void onEvent(@Payload String rawJson,
+                        @Header(KafkaHeaders.RECEIVED_KEY) String patientCode,
+                        @Header(name = EventHeaders.DEVICE_ID, required = false) String deviceId) {
+        persistence.persist(rawJson, patientCode, deviceId);
     }
 }

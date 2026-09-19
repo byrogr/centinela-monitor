@@ -69,12 +69,12 @@ public class SilenceIncident {
         this.openedAt = openedAt;
     }
 
-    public boolean estaAbierta() {
+    public boolean isOpen() {
         return closedAt == null;
     }
 
     /** Cierra la incidencia cuando el dispositivo vuelve a dar senal. */
-    public void cerrar(Instant cuando) {
-        this.closedAt = cuando;
+    public void close(Instant when) {
+        this.closedAt = when;
     }
 }

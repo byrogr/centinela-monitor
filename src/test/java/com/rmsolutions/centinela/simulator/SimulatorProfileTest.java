@@ -25,23 +25,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("simulator")
 // Con 0 eventos el bucle del simulador no se ejecuta: el test no hace peticiones HTTP.
 @TestPropertySource(properties = "app.simulator.event-count=0")
-class PerfilSimuladorTest {
+class SimulatorProfileTest {
 
     @Autowired
-    private ApplicationContext contexto;
+    private ApplicationContext context;
 
     @Test
-    void elContextoDelSimuladorLevantaSinInfraestructura() {
-        assertThat(contexto.getBean(OsdSimulator.class)).isNotNull();
-        assertThat(contexto.getBean(ScenarioGenerator.class)).isNotNull();
+    void theSimulatorContextStartsWithoutInfrastructure() {
+        assertThat(context.getBean(OsdSimulator.class)).isNotNull();
+        assertThat(context.getBean(ScenarioGenerator.class)).isNotNull();
     }
 
     @Test
-    void elSimuladorNoArrastraNingunBeanQueNecesiteBaseDeDatosOKafka() {
-        assertThat(contexto.getBeanNamesForType(javax.sql.DataSource.class))
+    void theSimulatorDragsNoBeanNeedingDatabaseOrKafka() {
+        assertThat(context.getBeanNamesForType(javax.sql.DataSource.class))
                 .as("el perfil simulador excluye JPA a proposito")
                 .isEmpty();
-        assertThat(contexto.getBeanNamesForType(org.springframework.kafka.core.KafkaTemplate.class))
+        assertThat(context.getBeanNamesForType(org.springframework.kafka.core.KafkaTemplate.class))
                 .as("el simulador solo hace POST HTTP")
                 .isEmpty();
     }

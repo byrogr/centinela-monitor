@@ -18,6 +18,7 @@ public record SimulatorProperties(
         String targetUrl,
         long intervalMs,
         int eventCount,
-        Scenario scenario
+        Scenario scenario,
+        String apiKey
 ) {
 }

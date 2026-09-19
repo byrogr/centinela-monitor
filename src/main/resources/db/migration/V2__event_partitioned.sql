@@ -49,7 +49,7 @@ CREATE INDEX idx_event_device_time ON event (device_id, event_time DESC);
 -- Nota: DROP de una particion (retencion) NO dispara el trigger, asi que la
 -- politica de archivado a futuro sigue siendo posible.
 -- -----------------------------------------------------------------------------
-CREATE FUNCTION event_bloquear_mutacion() RETURNS trigger
+CREATE FUNCTION event_block_mutation() RETURNS trigger
     LANGUAGE plpgsql AS
 $$
 BEGIN
@@ -62,32 +62,32 @@ CREATE TRIGGER event_append_only
     BEFORE UPDATE OR DELETE
     ON event
     FOR EACH ROW
-EXECUTE FUNCTION event_bloquear_mutacion();
+EXECUTE FUNCTION event_block_mutation();
 
 -- -----------------------------------------------------------------------------
 -- Gestion de particiones mensuales.
 -- -----------------------------------------------------------------------------
-CREATE FUNCTION event_crear_particion(p_mes date) RETURNS text
+CREATE FUNCTION event_create_partition(p_month date) RETURNS text
     LANGUAGE plpgsql AS
 $$
 DECLARE
-    v_inicio date := date_trunc('month', p_mes)::date;
-    v_fin    date := (date_trunc('month', p_mes) + interval '1 month')::date;
-    v_nombre text := 'event_' || to_char(v_inicio, 'YYYY_MM');
+    v_start date := date_trunc('month', p_month)::date;
+    v_end    date := (date_trunc('month', p_month) + interval '1 month')::date;
+    v_name text := 'event_' || to_char(v_start, 'YYYY_MM');
 BEGIN
-    IF to_regclass('public.' || v_nombre) IS NOT NULL THEN
-        RETURN v_nombre || ' (ya existia)';
+    IF to_regclass('public.' || v_name) IS NOT NULL THEN
+        RETURN v_name || ' (ya existia)';
     END IF;
 
     EXECUTE format(
         'CREATE TABLE %I PARTITION OF event FOR VALUES FROM (%L) TO (%L)',
-        v_nombre, v_inicio, v_fin);
+        v_name, v_start, v_end);
 
-    RETURN v_nombre || ' (creada)';
+    RETURN v_name || ' (creada)';
 END;
 $$;
 
-COMMENT ON FUNCTION event_crear_particion(date) IS
+COMMENT ON FUNCTION event_create_partition(date) IS
     'Crea la particion mensual que contiene la fecha dada, si no existe. '
     'Idempotente: se puede llamar desde una tarea programada cada mes.';
 
@@ -96,12 +96,12 @@ COMMENT ON FUNCTION event_crear_particion(date) IS
 DO
 $$
     DECLARE
-        v_mes date := (date_trunc('month', now()) - interval '1 month')::date;
+        v_month date := (date_trunc('month', now()) - interval '1 month')::date;
     BEGIN
         FOR i IN 0..13
             LOOP
-                PERFORM event_crear_particion(v_mes);
-                v_mes := (v_mes + interval '1 month')::date;
+                PERFORM event_create_partition(v_month);
+                v_month := (v_month + interval '1 month')::date;
             END LOOP;
     END;
 $$;

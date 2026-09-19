@@ -42,7 +42,8 @@ Flyway aplica las migraciones al arrancar el backend. Hay dos ubicaciones:
   para que el seed nunca se aplique.
 
 API key del dispositivo de desarrollo (solo local): `lenzo-dev-child-001-0123456789abcdef`.
-La base guarda unicamente su SHA-256.
+La base guarda unicamente su SHA-256. El webhook la exige en la cabecera `X-Device-Key`;
+el secreto compartido `X-OSD-Token` de la Fase 1 ya no existe.
 
 La tabla `event` es append-only: un trigger rechaza `UPDATE` y `DELETE`. Para limpiar datos de
 prueba en local usa `TRUNCATE event`.
@@ -81,7 +82,7 @@ Escenarios: `NORMAL | SEIZURE | FALL | LOW_BATTERY | DISCONNECT | RANDOM`.
 ```bash
 curl -X POST http://localhost:8080/api/v1/osd/events \
   -H "Content-Type: application/json" \
-  -H "X-OSD-Token: dev-local-secret-change-me" \
+  -H "X-Device-Key: lenzo-dev-child-001-0123456789abcdef" \
   -d '{"Time":"2026-09-18 00:05:32","alarmState":2,"alarmPhrase":"ALARM","maxFreq":5.4,"maxVal":1250.3,"specPower":4500.1,"roiPower":3800.8,"heartRate":134,"batteryLevel":88,"watchConnected":true}'
 ```
 

@@ -44,7 +44,7 @@ CREATE TABLE caregiver (
     phone        text,
     created_at   timestamptz NOT NULL DEFAULT now(),
     -- Sin email ni telefono no hay forma de avisarle: no lo admitimos.
-    CONSTRAINT caregiver_contacto_presente CHECK (email IS NOT NULL OR phone IS NOT NULL)
+    CONSTRAINT caregiver_contact_present CHECK (email IS NOT NULL OR phone IS NOT NULL)
 );
 
 CREATE INDEX idx_caregiver_account ON caregiver (account_id);
@@ -58,7 +58,7 @@ CREATE TABLE caregiver_link (
     PRIMARY KEY (caregiver_id, patient_id),
     -- Sin empates en el orden de escalado: 'a quien aviso primero' no puede ser ambiguo.
     -- DEFERRABLE para poder reordenar la cadena completa dentro de una transaccion.
-    CONSTRAINT caregiver_link_orden_unico UNIQUE (patient_id, escalation_order)
+    CONSTRAINT caregiver_link_unique_order UNIQUE (patient_id, escalation_order)
         DEFERRABLE INITIALLY IMMEDIATE
 );
 
@@ -96,7 +96,7 @@ CREATE TABLE alert_rule (
     escalate_after_seconds int         NOT NULL DEFAULT 60 CHECK (escalate_after_seconds >= 0),
     enabled                boolean     NOT NULL DEFAULT true,
     created_at             timestamptz NOT NULL DEFAULT now(),
-    CONSTRAINT alert_rule_unica_por_severidad UNIQUE (patient_id, severity)
+    CONSTRAINT alert_rule_unique_per_severity UNIQUE (patient_id, severity)
 );
 
 COMMENT ON COLUMN alert_rule.escalate_after_seconds IS

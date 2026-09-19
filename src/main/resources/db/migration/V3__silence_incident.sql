@@ -21,7 +21,7 @@ CREATE TABLE silence_incident (
     -- Evento sintetico que se inyecto al pipeline al abrir la incidencia.
     -- Sirve para rastrear la alerta sin duplicarla en cada ciclo del scheduler.
     synthetic_dedup_key text,
-    CONSTRAINT silence_incident_cierre_coherente CHECK (closed_at IS NULL OR closed_at >= opened_at)
+    CONSTRAINT silence_incident_consistent_closure CHECK (closed_at IS NULL OR closed_at >= opened_at)
 );
 
 COMMENT ON TABLE silence_incident IS
@@ -30,7 +30,7 @@ COMMENT ON TABLE silence_incident IS
 -- Idempotencia del vigilante: como maximo UNA incidencia abierta por dispositivo.
 -- Sin esto, cada ciclo del scheduler abriria una incidencia nueva y el cuidador
 -- recibiria una alerta repetida cada pocos segundos.
-CREATE UNIQUE INDEX idx_silence_incident_abierta_por_device
+CREATE UNIQUE INDEX idx_silence_incident_open_per_device
     ON silence_incident (device_id)
     WHERE closed_at IS NULL;
 

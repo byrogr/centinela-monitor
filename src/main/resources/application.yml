@@ -72,18 +72,23 @@ management:
 
 # ---- Configuracion de negocio de Centinela ----
 app:
-  # Identificador del nino monitoreado; se usa como clave de particion en Kafka
-  # para garantizar orden por-persona. En multi-paciente vendria del payload/token.
-  child-id: ${CHILD_ID:child-001}
-  # Secreto compartido que valida el webhook (cabecera X-OSD-Token). CAMBIAR en prod.
-  webhook-token: ${WEBHOOK_TOKEN:dev-local-secret-change-me}
   # Umbral de bateria baja (%) que dispara una advertencia derivada.
   low-battery-threshold: 15
   # Debe coincidir con la zona del celular que corre OSD.
   osd-time-zone: ${OSD_TIME_ZONE:America/Lima}
 
+  # ---- Ingesta: guardias del webhook (Fase 2) ----
+  ingest:
+    # OSD emite cada ~5s (12/min). El tope frena bucles y abusos, no trafico legitimo.
+    max-events-per-minute: ${INGEST_MAX_EVENTS_PER_MINUTE:120}
+    # Ventana en la que el borde recuerda un evento ya aceptado, para descartar
+    # reintentos del dispositivo. La deduplicacion definitiva la hace PostgreSQL.
+    dedup-ttl-seconds: ${INGEST_DEDUP_TTL_SECONDS:300}
+
   simulator:
     target-url: ${SIM_TARGET_URL:http://localhost:8080/api/v1/osd/events}
+    # API key del dispositivo de desarrollo que siembra la migracion V4.
+    api-key: ${SIM_API_KEY:lenzo-dev-child-001-0123456789abcdef}
     interval-ms: 2000
     event-count: 30          # -1 para bucle infinito
     scenario: SEIZURE        # NORMAL | SEIZURE | FALL | LOW_BATTERY | DISCONNECT | RANDOM

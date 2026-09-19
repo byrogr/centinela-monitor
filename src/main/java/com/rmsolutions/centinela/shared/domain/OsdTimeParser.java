@@ -1,4 +1,4 @@
-package com.rmsolutions.centinela.history.domain;
+package com.rmsolutions.centinela.shared.domain;
 
 import com.rmsolutions.centinela.shared.config.AppProperties;
 import java.time.Instant;
@@ -28,13 +28,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class OsdTimeParser {
 
-    private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final ZoneId zona;
+    private final ZoneId zone;
 
     public OsdTimeParser(AppProperties props) {
-        this.zona = ZoneId.of(props.osdTimeZone());
-        log.info("Los timestamps de OSD se interpretan en la zona {}", zona);
+        this.zone = ZoneId.of(props.osdTimeZone());
+        log.info("Los timestamps de OSD se interpretan en la zona {}", zone);
     }
 
     /**
@@ -42,20 +42,20 @@ public class OsdTimeParser {
      * decide que hacer: aqui no inventamos una fecha, porque un timestamp
      * fabricado contaminaria el historial y romperia la deduplicacion.
      */
-    public Optional<Instant> aInstante(String osdTime) {
+    public Optional<Instant> toInstant(String osdTime) {
         if (osdTime == null || osdTime.isBlank()) {
             return Optional.empty();
         }
         try {
-            return Optional.of(LocalDateTime.parse(osdTime.trim(), FORMATO)
-                    .atZone(zona)
+            return Optional.of(LocalDateTime.parse(osdTime.trim(), FORMAT)
+                    .atZone(zone)
                     .toInstant());
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
     }
 
-    public ZoneId zona() {
-        return zona;
+    public ZoneId zone() {
+        return zone;
     }
 }

@@ -1,68 +1,76 @@
 package com.rmsolutions.centinela.ingestion.api;
 
+import com.rmsolutions.centinela.ingestion.application.EventIngestionService;
+import com.rmsolutions.centinela.ingestion.application.IngestOutcome;
 import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
-import com.rmsolutions.centinela.ingestion.domain.RoutingDecision;
-import com.rmsolutions.centinela.ingestion.messaging.EventRoutingProducer;
-import com.rmsolutions.centinela.shared.config.AppProperties;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 /**
  * Webhook HTTP. El celular con OSD hace POST del JSON aqui.
  *
- * Buenas practicas aplicadas:
- *  - Autenticacion por secreto compartido (cabecera X-OSD-Token). Un endpoint
- *    publico que dispara emergencias no puede quedar abierto a Internet.
- *  - Respuesta 202 Accepted: confirmamos rapido y el procesamiento (Kafka)
- *    continua de forma asincrona. Un webhook debe responder pronto.
+ * Adaptador de entrada: autentica y decide el codigo HTTP, nada mas. La logica
+ * vive en {@link EventIngestionService}.
+ *
+ * Cada dispositivo se identifica con su propia credencial en la cabecera
+ * 'X-Device-Key'. Sustituye al secreto compartido de la Fase 1, que era el mismo
+ * para todos, venia con un valor por defecto en el yml y ademas dejaba pasar
+ * cualquier peticion si se configuraba vacio.
+ *
+ * Se responde 202 rapido y el procesamiento sigue de forma asincrona: un webhook
+ * que tarda hace que el dispositivo reintente.
  *
  * @author Roger Rojas
  * @since 2026-09-18
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/osd")
 @Profile("!simulator")
-@Slf4j
 @RequiredArgsConstructor
 public class OsdIngestController {
 
-    private final EventRoutingProducer producer;
-    private final AppProperties props;
+    private final EventIngestionService ingestion;
 
     @PostMapping("/events")
     public ResponseEntity<Map<String, Object>> ingest(
-            @RequestHeader(value = "X-OSD-Token", required = false) String token,
+            @RequestHeader(value = "X-Device-Key", required = false) String deviceKey,
             @RequestBody OsdEvent event) {
-
-        if (!tokenValido(token)) {
-            log.warn("Webhook rechazado: token invalido o ausente");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
         if (event == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        RoutingDecision decision = producer.publish(event);
+        return switch (ingestion.ingest(deviceKey, event)) {
+            case IngestOutcome.Accepted a -> ResponseEntity.accepted().body(Map.of(
+                    "status", "accepted",
+                    "severity", a.severity().name(),
+                    "routedTo", a.topics()));
 
-        return ResponseEntity.accepted().body(Map.of(
-                "status", "accepted",
-                "severity", decision.severity().name(),
-                "routedTo", decision.topics()
-        ));
-    }
+            // 202 y no un error: para el dispositivo el evento ya se acepto, y
+            // devolverle un fallo solo lo haria reintentar en bucle.
+            case IngestOutcome.Duplicate d -> ResponseEntity.accepted().body(Map.of(
+                    "status", "duplicate"));
 
-    private boolean tokenValido(String token) {
-        String expected = props.webhookToken();
-        // Si no se configuro token, no bloqueamos (util en dev). En prod SIEMPRE debe existir.
-        if (expected == null || expected.isBlank()) {
-            return true;
-        }
-        return expected.equals(token);
+            case IngestOutcome.Unauthorized u ->
+                    ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            case IngestOutcome.RateLimited r ->
+                    ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+
+            case IngestOutcome.Unprocessable p -> ResponseEntity
+                    .unprocessableEntity()
+                    .body(Map.of("status", "rejected", "reason", p.reason()));
+        };
     }
 }

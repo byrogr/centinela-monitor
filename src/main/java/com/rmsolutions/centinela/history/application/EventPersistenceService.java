@@ -1,17 +1,18 @@
 package com.rmsolutions.centinela.history.application;
 
-import com.rmsolutions.centinela.history.domain.DedupKeys;
-import com.rmsolutions.centinela.history.domain.OsdTimeParser;
 import com.rmsolutions.centinela.history.persistence.EventRepository;
 import com.rmsolutions.centinela.ingestion.domain.OsdEvent;
+import com.rmsolutions.centinela.ingestion.domain.SeverityRouter;
 import com.rmsolutions.centinela.registry.domain.Device;
 import com.rmsolutions.centinela.registry.domain.Patient;
 import com.rmsolutions.centinela.registry.persistence.DeviceRepository;
 import com.rmsolutions.centinela.registry.persistence.PatientRepository;
-import com.rmsolutions.centinela.ingestion.domain.SeverityRouter;
+import com.rmsolutions.centinela.shared.domain.DedupKeys;
+import com.rmsolutions.centinela.shared.domain.OsdTimeParser;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -53,40 +54,39 @@ public class EventPersistenceService {
      * @param rawJson payload ORIGINAL de OSD, sin reserializar: es lo que se guarda
      *                en raw_payload, y re-serializarlo perderia los campos que el
      *                record OsdEvent no conoce.
-     * @param childId clave del mensaje en Kafka; identifica al paciente.
+     * @param patientCode clave del mensaje en Kafka; identifica al paciente.
+     * @param deviceIdHeader dispositivo que el webhook autentico y propago. Puede
+     *                       venir vacio en mensajes publicados antes de la tarea 7,
+     *                       que siguen en el topico y deben poder reprocesarse.
      * @return true si el evento se guardo; false si era duplicado o no se pudo resolver.
      */
     @Transactional
-    public boolean persistir(String rawJson, String childId) {
+    public boolean persist(String rawJson, String patientCode, String deviceIdHeader) {
         OsdEvent event;
         try {
             event = jsonMapper.readValue(rawJson, OsdEvent.class);
         } catch (RuntimeException e) {
             // Mensaje ilegible: no hay nada que persistir y reintentar no lo arreglara.
-            return descartar(childId, "el payload no es un evento OSD valido: " + e.getMessage(), rawJson);
+            return discard(patientCode, "el payload no es un evento OSD valido: " + e.getMessage(), rawJson);
         }
 
-        Optional<Instant> eventTime = timeParser.aInstante(event.time());
+        Optional<Instant> eventTime = timeParser.toInstant(event.time());
         if (eventTime.isEmpty()) {
-            return descartar(childId, "el campo 'Time' no es interpretable: '" + event.time() + "'", rawJson);
+            return discard(patientCode, "el campo 'Time' no es interpretable: '" + event.time() + "'", rawJson);
         }
 
-        Optional<Patient> patient = patients.findByCode(childId);
-        if (patient.isEmpty()) {
-            return descartar(childId, "no hay ningun paciente registrado con ese code", rawJson);
-        }
-
-        Optional<Device> device = resolverDispositivo(patient.get());
+        Optional<Device> device = resolveDevice(patientCode, deviceIdHeader);
         if (device.isEmpty()) {
             return false;
         }
+        UUID patientId = device.get().getPatient().getId();
 
-        String dedupKey = DedupKeys.de(device.get().getId(), eventTime.get(), event.alarmState());
+        String dedupKey = DedupKeys.of(device.get().getId(), eventTime.get(), event.alarmState());
         String severity = router.route(event).severity().name();
 
-        int filas = events.insertarSiNoExiste(
+        int rows = events.insertIfAbsent(
                 device.get().getId(),
-                patient.get().getId(),
+                patientId,
                 eventTime.get(),
                 event.alarmState(),
                 severity,
@@ -96,37 +96,67 @@ public class EventPersistenceService {
                 rawJson,
                 dedupKey);
 
-        if (filas == 0) {
-            log.debug("Evento duplicado descartado | childId={} dedupKey={}", childId, dedupKey);
+        if (rows == 0) {
+            log.debug("Evento duplicado descartado | paciente={} dedupKey={}", patientCode, dedupKey);
             return false;
         }
-        log.debug("Evento persistido | childId={} severidad={} dedupKey={}", childId, severity, dedupKey);
+        log.debug("Evento persistido | paciente={} severidad={} dedupKey={}",
+                patientCode, severity, dedupKey);
         return true;
     }
 
     /**
      * Resuelve el dispositivo emisor.
      *
-     * De momento se deriva del paciente, porque el mensaje de la Fase 1 solo lleva
-     * el childId como clave. A partir de la tarea 7 el webhook autentica con
-     * X-Device-Key y podra propagar la identidad del dispositivo directamente;
-     * esta resolucion pasara a ser el respaldo.
+     * La via buena es la cabecera que propaga el webhook, que ya autentico al
+     * dispositivo. El respaldo por paciente solo se usa con mensajes anteriores a
+     * la tarea 7, que siguen en el topico con su retencion y deben poder
+     * reprocesarse; con mas de un dispositivo activo ese respaldo no puede acertar.
      */
-    private Optional<Device> resolverDispositivo(Patient patient) {
-        List<Device> activos = devices.findByPatientId(patient.getId()).stream()
+    private Optional<Device> resolveDevice(String patientCode, String deviceIdHeader) {
+        if (deviceIdHeader != null && !deviceIdHeader.isBlank()) {
+            return resolveFromHeader(deviceIdHeader);
+        }
+        return patients.findByCode(patientCode)
+                .map(this::resolveFromPatient)
+                .orElseGet(() -> {
+                    log.error("Evento sin persistir | no hay ningun paciente con code={}", patientCode);
+                    return Optional.empty();
+                });
+    }
+
+    private Optional<Device> resolveFromHeader(String deviceIdHeader) {
+        UUID deviceId;
+        try {
+            deviceId = UUID.fromString(deviceIdHeader);
+        } catch (IllegalArgumentException e) {
+            log.error("Evento sin persistir | la cabecera de dispositivo no es un UUID: '{}'",
+                    deviceIdHeader);
+            return Optional.empty();
+        }
+        Optional<Device> device = devices.findById(deviceId);
+        if (device.isEmpty()) {
+            log.error("Evento sin persistir | la cabecera apunta a un dispositivo inexistente: {}",
+                    deviceId);
+        }
+        return device;
+    }
+
+    private Optional<Device> resolveFromPatient(Patient patient) {
+        List<Device> active = devices.findByPatientId(patient.getId()).stream()
                 .filter(Device::isActive)
                 .toList();
 
-        if (activos.size() == 1) {
-            return Optional.of(activos.getFirst());
+        if (active.size() == 1) {
+            return Optional.of(active.getFirst());
         }
-        if (activos.isEmpty()) {
+        if (active.isEmpty()) {
             log.error("Evento sin persistir | paciente={} no tiene ningun dispositivo activo registrado",
                     patient.getCode());
         } else {
             log.error("Evento sin persistir | paciente={} tiene {} dispositivos activos y el mensaje "
                             + "no dice cual lo emitio; atribuirlo al azar falsearia el historial",
-                    patient.getCode(), activos.size());
+                    patient.getCode(), active.size());
         }
         return Optional.empty();
     }
@@ -144,8 +174,8 @@ public class EventPersistenceService {
      * con su retencion, listo para reprocesarse, y el camino critico que avisa a los
      * cuidadores corre por otro consumer group que no depende de esto.
      */
-    private boolean descartar(String childId, String motivo, String rawJson) {
-        log.error("Evento sin persistir | childId={} motivo={} payload={}", childId, motivo, rawJson);
+    private boolean discard(String childId, String reason, String rawJson) {
+        log.error("Evento sin persistir | childId={} motivo={} payload={}", childId, reason, rawJson);
         return false;
     }
 }

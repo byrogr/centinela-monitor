@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.flyway.locations=classpath:db/migration,classpath:db/seed"
 })
 @Testcontainers
-class PersistenciaJpaTest {
+class JpaMappingTest {
 
     @Container
     @ServiceConnection
@@ -68,108 +68,108 @@ class PersistenciaJpaTest {
     @Autowired
     private AlertRuleRepository rules;
 
-    private Patient paciente;
-    private Device dispositivo;
+    private Patient patient;
+    private Device device;
 
     @BeforeEach
-    void cargarSeed() {
-        paciente = patients.findByCode("child-001").orElseThrow();
-        dispositivo = devices.findByPatientId(paciente.getId()).getFirst();
+    void loadSeed() {
+        patient = patients.findByCode("child-001").orElseThrow();
+        device = devices.findByPatientId(patient.getId()).getFirst();
     }
 
     @Test
-    void elChildIdDeKafkaResuelveAlPaciente() {
-        assertThat(paciente.getDisplayName()).isEqualTo("Paciente Demo");
+    void theKafkaChildIdResolvesToThePatient() {
+        assertThat(patient.getDisplayName()).isEqualTo("Paciente Demo");
         // Minimizacion de datos: solo el anio, nunca la fecha completa.
-        assertThat(paciente.getBirthYear()).isEqualTo(2015);
+        assertThat(patient.getBirthYear()).isEqualTo(2015);
     }
 
     @Test
-    void elDispositivoSeEncuentraPorHashDeApiKeyYNuncaPorLaClaveEnClaro() {
-        assertThat(devices.findByApiKeyHashAndActiveTrue(dispositivo.getApiKeyHash()))
+    void theDeviceIsFoundByApiKeyHashAndNeverByThePlainKey() {
+        assertThat(devices.findByApiKeyHashAndActiveTrue(device.getApiKeyHash()))
                 .isPresent();
         assertThat(devices.findByApiKeyHashAndActiveTrue("lenzo-dev-child-001-0123456789abcdef"))
-                .as("la clave en claro no puede servir para autenticar: la base solo guarda el hash")
+                .as("la key en claro no puede servir para autenticar: la base solo guarda el hash")
                 .isEmpty();
     }
 
     @Test
-    void insertarUnEventoEsIdempotente() {
-        Instant cuando = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    void insertingAnEventIsIdempotent() {
+        Instant when = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         String dedupKey = "dk-" + UUID.randomUUID();
 
-        assertThat(insertar(cuando, dedupKey, 2, Severity.CRITICAL))
+        assertThat(insert(when, dedupKey, 2, Severity.CRITICAL))
                 .as("primer INSERT: el evento entra")
                 .isEqualTo(1);
 
-        assertThat(insertar(cuando, dedupKey, 2, Severity.CRITICAL))
+        assertThat(insert(when, dedupKey, 2, Severity.CRITICAL))
                 .as("mismo evento reprocesado: descartado, sin excepcion")
                 .isEqualTo(0);
 
-        List<Event> historial = events.historialDePaciente(
-                paciente.getId(),
-                cuando.minus(1, ChronoUnit.HOURS),
-                cuando.plus(1, ChronoUnit.HOURS),
+        List<Event> history = events.findPatientHistory(
+                patient.getId(),
+                when.minus(1, ChronoUnit.HOURS),
+                when.plus(1, ChronoUnit.HOURS),
                 PageRequest.of(0, 10));
 
-        assertThat(historial).hasSize(1);
-        assertThat(historial.getFirst().getDedupKey()).isEqualTo(dedupKey);
+        assertThat(history).hasSize(1);
+        assertThat(history.getFirst().getDedupKey()).isEqualTo(dedupKey);
     }
 
     @Test
-    void elEventoPersistidoConservaSeveridadYPayloadOriginal() {
-        Instant cuando = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    void thePersistedEventKeepsSeverityAndOriginalPayload() {
+        Instant when = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         String dedupKey = "dk-" + UUID.randomUUID();
-        insertar(cuando, dedupKey, 3, Severity.CRITICAL);
+        insert(when, dedupKey, 3, Severity.CRITICAL);
 
-        Event evento = events.ultimoEventoDeDispositivo(
-                dispositivo.getId(), cuando.minus(1, ChronoUnit.HOURS)).orElseThrow();
+        Event evento = events.findLastDeviceEvent(
+                device.getId(), when.minus(1, ChronoUnit.HOURS)).orElseThrow();
 
         assertThat(evento.getSeverity()).isEqualTo(Severity.CRITICAL);
         assertThat(evento.getAlarmState()).as("el codigo crudo de OSD se guarda sin traducir").isEqualTo(3);
         assertThat(evento.getRawPayload()).contains("\"alarmPhrase\"");
-        assertThat(evento.getEventTime()).isEqualTo(cuando);
+        assertThat(evento.getEventTime()).isEqualTo(when);
         assertThat(evento.getIngestedAt()).as("lo pone la base, no el codigo").isNotNull();
     }
 
     @Test
-    void soloHayUnaIncidenciaDeSilencioAbiertaPorDispositivo() {
-        Instant ahora = Instant.now();
+    void onlyOneOpenSilenceIncidentPerDevice() {
+        Instant now = Instant.now();
         incidents.saveAndFlush(new SilenceIncident(
-                dispositivo.getId(), paciente.getId(), ahora.minusSeconds(300), 240, ahora));
+                device.getId(), patient.getId(), now.minusSeconds(300), 240, now));
 
-        assertThat(incidents.findByDeviceIdAndClosedAtIsNull(dispositivo.getId())).isPresent();
+        assertThat(incidents.findByDeviceIdAndClosedAtIsNull(device.getId())).isPresent();
         assertThat(incidents.findByClosedAtIsNull()).hasSize(1);
 
-        SilenceIncident abierta = incidents.findByDeviceIdAndClosedAtIsNull(dispositivo.getId()).orElseThrow();
-        abierta.cerrar(ahora);
-        incidents.saveAndFlush(abierta);
+        SilenceIncident open = incidents.findByDeviceIdAndClosedAtIsNull(device.getId()).orElseThrow();
+        open.close(now);
+        incidents.saveAndFlush(open);
 
         assertThat(incidents.findByClosedAtIsNull())
-                .as("cerrada la incidencia, el dispositivo puede volver a vigilarse")
+                .as("cerrada la incidencia, el device puede volver a vigilarse")
                 .isEmpty();
     }
 
     @Test
-    void laCadenaDeEscaladoLlegaOrdenada() {
-        assertThat(links.findByIdPatientIdOrderByEscalationOrderAsc(paciente.getId()))
+    void theEscalationChainComesOrdered() {
+        assertThat(links.findByIdPatientIdOrderByEscalationOrderAsc(patient.getId()))
                 .extracting(CaregiverLink::getEscalationOrder)
                 .containsExactly(1, 2);
     }
 
     @Test
-    void cadaSeveridadTieneSuReglaDeAlerta() {
-        assertThat(rules.findByPatientId(paciente.getId())).hasSize(3);
-        assertThat(rules.findByPatientIdAndSeverityAndEnabledTrue(paciente.getId(), Severity.CRITICAL))
+    void everySeverityHasItsAlertRule() {
+        assertThat(rules.findByPatientId(patient.getId())).hasSize(3);
+        assertThat(rules.findByPatientIdAndSeverityAndEnabledTrue(patient.getId(), Severity.CRITICAL))
                 .isPresent()
                 .get()
                 .extracting(AlertRule::getEscalateAfterSeconds)
                 .isEqualTo(60);
     }
 
-    private int insertar(Instant cuando, String dedupKey, int alarmState, Severity severity) {
-        return events.insertarSiNoExiste(
-                dispositivo.getId(), paciente.getId(), cuando, alarmState, severity.name(),
+    private int insert(Instant when, String dedupKey, int alarmState, Severity severity) {
+        return events.insertIfAbsent(
+                device.getId(), patient.getId(), when, alarmState, severity.name(),
                 134, 88, true,
                 "{\"alarmState\":%d,\"alarmPhrase\":\"ALARM\"}".formatted(alarmState),
                 dedupKey);
